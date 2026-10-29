@@ -10,35 +10,63 @@
   <div class="app">
     <header>
       <h1>📚 Мой планировщик</h1>
-      <p id="todayDate" class="subtitle"></p>
     </header>
 
-    <div class="progress-box">
-      <p id="progressText">Нет задач</p>
-      <div class="progress">
-        <div id="progressBar" class="progress-bar"></div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="day">📅 День</button>
+      <button class="tab" data-tab="week">🗓 Неделя</button>
+      <button class="tab" data-tab="stats">📊 Статистика</button>
+    </nav>
+
+    <!-- ВКЛАДКА: ДЕНЬ -->
+    <section id="dayTab">
+      <div class="day-nav">
+        <button id="prevDay" class="nav-btn">◀</button>
+        <div class="day-center">
+          <p id="dayLabel" class="day-label"></p>
+          <input type="date" id="dateInput">
+        </div>
+        <button id="nextDay" class="nav-btn">▶</button>
       </div>
-    </div>
+      <button id="todayBtn" class="today-btn">Перейти к сегодня</button>
 
-    <div class="form">
-      <input type="text" id="taskInput" placeholder="Напиши здесь...">
-
-      <label class="check">
-        <input type="checkbox" id="timeToggle">
-        ⏰ Указать время
-      </label>
-
-      <div id="timeFields" class="hidden">
-        <input type="time" id="startInput">
-        <span>—</span>
-        <input type="time" id="endInput">
+      <div class="progress-box">
+        <p id="progressText">Нет задач</p>
+        <div class="progress">
+          <div id="progressBar" class="progress-bar"></div>
+        </div>
       </div>
 
-      <button id="addButton">➕ Добавить</button>
-    </div>
+      <div class="form">
+        <input type="text" id="taskInput" placeholder="Напиши здесь...">
 
-    <ul id="taskList"></ul>
-    <p id="emptyText" class="empty">Пока задач нет. Добавь первую! ✨</p>
+        <label class="check">
+          <input type="checkbox" id="timeToggle">
+          ⏰ Указать время
+        </label>
+
+        <div id="timeFields" class="hidden">
+          <input type="time" id="startInput">
+          <span>—</span>
+          <input type="time" id="endInput">
+        </div>
+
+        <button id="addButton">➕ Добавить</button>
+      </div>
+
+      <ul id="taskList"></ul>
+      <p id="emptyText" class="empty">На этот день задач нет. Добавь первую! ✨</p>
+    </section>
+
+    <!-- ВКЛАДКА: НЕДЕЛЯ -->
+    <section id="weekTab" class="hidden">
+      <div id="weekList"></div>
+    </section>
+
+    <!-- ВКЛАДКА: СТАТИСТИКА -->
+    <section id="statsTab" class="hidden">
+      <div id="statsBox" class="stats-grid"></div>
+    </section>
   </div>
 
   <script src="script.js"></script>
