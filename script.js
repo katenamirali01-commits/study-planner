@@ -1,40 +1,21 @@
-// ===== Элементы страницы =====
-const taskInput = document.getElementById("taskInput");
-const timeToggle = document.getElementById("timeToggle");
-const timeFields = document.getElementById("timeFields");
-const startInput = document.getElementById("startInput");
-const endInput = document.getElementById("endInput");
-const addButton = document.getElementById("addButton");
-const taskList = document.getElementById("taskList");
-const emptyText = document.getElementById("emptyText");
-const progressText = document.getElementById("progressText");
-const progressBar = document.getElementById("progressBar");
+// ===== Помощники =====
+const $ = (id) => document.getElementById(id);
 
-const dayLabel = document.getElementById("dayLabel");
-const dateInput = document.getElementById("dateInput");
-const prevDay = document.getElementById("prevDay");
-const nextDay = document.getElementById("nextDay");
-const todayBtn = document.getElementById("todayBtn");
+// создаёт элемент: тег, класс, текст
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
 
-const weekList = document.getElementById("weekList");
-const statsBox = document.getElementById("statsBox");
-
-// ===== Работа с датами =====
-// превращаем дату в строку вида 2026-10-29
 function toISO(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return y + "-" + m + "-" + day;
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
-
-// превращаем строку 2026-10-29 обратно в дату
 function fromISO(s) {
-  const parts = s.split("-").map(Number);
-  return new Date(parts[0], parts[1] - 1, parts[2]);
+  const p = s.split("-").map(Number);
+  return new Date(p[0], p[1] - 1, p[2]);
 }
-
-// прибавляем (или отнимаем) дни
 function addDays(iso, n) {
   const d = fromISO(iso);
   d.setDate(d.getDate() + n);
@@ -44,303 +25,449 @@ function addDays(iso, n) {
 const todayISO = toISO(new Date());
 let currentDate = todayISO;
 
-// красивое название дня
 function dayName(iso) {
   if (iso === todayISO) return "Сегодня";
   if (iso === addDays(todayISO, 1)) return "Завтра";
   if (iso === addDays(todayISO, -1)) return "Вчера";
-  return fromISO(iso).toLocaleDateString("ru-RU", {
-    weekday: "long",
-    day: "numeric",
-    month: "long"
-  });
+  return fromISO(iso).toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" });
+}
+function timeText(s, e) {
+  return e ? s + "–" + e : s;
 }
 
 // ===== Данные =====
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+function load(key) {
+  try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; }
+}
+let tasks = load("tasks");
+let exams = load("exams");
+let classes = load("classes");
 
-// старые задачи без даты становятся задачами на сегодня
-tasks.forEach(function (t) {
-  if (!t.date) {
-    t.date = todayISO;
-  }
+tasks.forEach((t) => {
+  if (!t.date) t.date = todayISO;
+  if (!t.priority) t.priority = "mid";
 });
 
-function saveTasks() {
+function save() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
+  localStorage.setItem("exams", JSON.stringify(exams));
+  localStorage.setItem("classes", JSON.stringify(classes));
 }
 
-function sortByTime(list) {
-  return [...list].sort(function (a, b) {
-    if (!a.start && !b.start) return 0;
-    if (!a.start) return 1;
-    if (!b.start) return -1;
-    return a.start.localeCompare(b.start);
+const PR = { high: 0, mid: 1, low: 2 };
+function sortTasks(list) {
+  return [...list].sort((a, b) => {
+    if (a.start && b.start) return a.start.localeCompare(b.start);
+    if (a.start) return -1;
+    if (b.start) return 1;
+    return PR[a.priority] - PR[b.priority];
   });
+}
+
+// ===== Тема =====
+function applyTheme() {
+  const dark = localStorage.getItem("theme") === "dark";
+  document.body.classList.toggle("dark", dark);
+  $("themeBtn").textContent = dark ? "☀️" : "🌙";
+}
+$("themeBtn").onclick = () => {
+  localStorage.setItem("theme", localStorage.getItem("theme") === "dark" ? "light" : "dark");
+  applyTheme();
+};
+
+// ===== Серия дней и конфетти =====
+function dayComplete(iso) {
+  const list = tasks.filter((t) => t.date === iso);
+  return list.length > 0 && list.every((t) => t.done);
+}
+function getStreak() {
+  let iso = todayISO;
+  if (!dayComplete(iso)) iso = addDays(iso, -1);
+  let n = 0;
+  while (dayComplete(iso)) {
+    n++;
+    iso = addDays(iso, -1);
+  }
+  return n;
+}
+function confetti() {
+  const colors = ["#ff6b6b", "#ffd43b", "#51cf66", "#4dabf7", "#da77f2"];
+  for (let i = 0; i < 50; i++) {
+    const c = el("div", "confetti");
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.background = colors[i % 5];
+    c.style.animationDelay = Math.random() * 0.8 + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 3500);
+  }
 }
 
 // ===== Вкладки =====
+const TABS = ["day", "week", "classes", "exams", "timer", "stats"];
 function showTab(name) {
-  document.getElementById("dayTab").classList.toggle("hidden", name !== "day");
-  document.getElementById("weekTab").classList.toggle("hidden", name !== "week");
-  document.getElementById("statsTab").classList.toggle("hidden", name !== "stats");
-
-  document.querySelectorAll(".tab").forEach(function (btn) {
-    btn.classList.toggle("active", btn.dataset.tab === name);
-  });
-
-  if (name === "day") renderDay();
-  if (name === "week") renderWeek();
-  if (name === "stats") renderStats();
+  TABS.forEach((t) => $(t + "Tab").classList.toggle("hidden", t !== name));
+  document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+  ({ day: renderDay, week: renderWeek, classes: renderClasses, exams: renderExams, timer: showTimer, stats: renderStats })[name]();
 }
-
-document.querySelectorAll(".tab").forEach(function (btn) {
-  btn.addEventListener("click", function () {
-    showTab(btn.dataset.tab);
-  });
+document.querySelectorAll(".tab").forEach((b) => {
+  b.onclick = () => showTab(b.dataset.tab);
 });
 
-// ===== Вкладка «День» =====
-function setDate(iso) {
-  currentDate = iso;
-  renderDay();
-}
-
-prevDay.addEventListener("click", function () {
-  setDate(addDays(currentDate, -1));
-});
-
-nextDay.addEventListener("click", function () {
-  setDate(addDays(currentDate, 1));
-});
-
-todayBtn.addEventListener("click", function () {
-  setDate(todayISO);
-});
-
-dateInput.addEventListener("change", function () {
-  if (dateInput.value) {
-    setDate(dateInput.value);
-  }
-});
-
-timeToggle.addEventListener("change", function () {
-  timeFields.classList.toggle("hidden", !timeToggle.checked);
-});
+// ===== День =====
+function setDate(iso) { currentDate = iso; renderDay(); }
+$("prevDay").onclick = () => setDate(addDays(currentDate, -1));
+$("nextDay").onclick = () => setDate(addDays(currentDate, 1));
+$("todayBtn").onclick = () => setDate(todayISO);
+$("dateInput").onchange = () => { if ($("dateInput").value) setDate($("dateInput").value); };
+$("timeToggle").onchange = () => $("timeFields").classList.toggle("hidden", !$("timeToggle").checked);
 
 function renderDay() {
-  dayLabel.textContent = dayName(currentDate);
-  dateInput.value = currentDate;
-  todayBtn.classList.toggle("hidden", currentDate === todayISO);
+  $("dayLabel").textContent = dayName(currentDate);
+  $("dateInput").value = currentDate;
+  $("todayBtn").classList.toggle("hidden", currentDate === todayISO);
 
-  taskList.innerHTML = "";
+  // пары этого дня недели
+  const wd = (fromISO(currentDate).getDay() + 6) % 7;
+  const dc = classes.filter((c) => c.day === wd).sort((a, b) => a.start.localeCompare(b.start));
+  const box = $("dayClasses");
+  box.innerHTML = "";
+  box.classList.toggle("hidden", dc.length === 0);
+  if (dc.length) {
+    box.appendChild(el("b", null, "🎓 Пары в этот день:"));
+    dc.forEach((c) => box.appendChild(el("div", null, timeText(c.start, c.end) + " " + c.name)));
+  }
 
-  const dayTasks = sortByTime(
-    tasks.filter(function (t) {
-      return t.date === currentDate;
-    })
-  );
+  // задачи
+  const list = sortTasks(tasks.filter((t) => t.date === currentDate));
+  $("taskList").innerHTML = "";
 
-  dayTasks.forEach(function (task) {
-    const li = document.createElement("li");
-    if (task.done) {
-      li.classList.add("completed");
-    }
+  list.forEach((task) => {
+    const li = el("li", "p-" + task.priority);
+    if (task.done) li.classList.add("completed");
 
-    const textBox = document.createElement("div");
-    textBox.className = "task-text";
-
-    if (task.start) {
-      const badge = document.createElement("span");
-      badge.className = "time-badge";
-      badge.textContent = task.end ? task.start + "–" + task.end : task.start;
-      textBox.appendChild(badge);
-    }
-
-    const label = document.createElement("span");
-    label.className = "task-label";
-    label.textContent = task.text;
-    textBox.appendChild(label);
-
-    textBox.addEventListener("click", function () {
+    const textBox = el("div", "task-text");
+    if (task.start) textBox.appendChild(el("span", "time-badge", timeText(task.start, task.end)));
+    textBox.appendChild(el("span", "task-label", task.text));
+    textBox.onclick = () => {
       task.done = !task.done;
-      saveTasks();
+      save();
       renderDay();
-    });
+      if (task.done && dayComplete(currentDate)) confetti();
+    };
 
-    const deleteButton = document.createElement("button");
-    deleteButton.className = "delete-btn";
-    deleteButton.textContent = "🗑";
-    deleteButton.addEventListener("click", function () {
-      tasks = tasks.filter(function (t) {
-        return t !== task;
-      });
-      saveTasks();
+    const edit = el("button", "small-btn", "✏️");
+    edit.onclick = () => {
+      const t = prompt("Исправь задачу:", task.text);
+      if (t && t.trim()) {
+        task.text = t.trim();
+        save();
+        renderDay();
+      }
+    };
+
+    const del = el("button", "small-btn del", "🗑");
+    del.onclick = () => {
+      tasks = tasks.filter((t) => t !== task);
+      save();
       renderDay();
-    });
+    };
 
-    li.appendChild(textBox);
-    li.appendChild(deleteButton);
-    taskList.appendChild(li);
+    const btns = el("div", "btns");
+    btns.append(edit, del);
+    li.append(textBox, btns);
+    $("taskList").appendChild(li);
   });
 
-  // прогресс за выбранный день
-  const total = dayTasks.length;
-  const doneCount = dayTasks.filter(function (t) {
-    return t.done;
-  }).length;
-
+  // прогресс
+  const total = list.length;
+  const done = list.filter((t) => t.done).length;
   if (total === 0) {
-    progressText.textContent = "Нет задач";
-    progressBar.style.width = "0%";
+    $("progressText").textContent = "Нет задач";
+    $("progressBar").style.width = "0%";
   } else {
-    const percent = Math.round((doneCount / total) * 100);
-    progressText.textContent = "Выполнено " + doneCount + " из " + total + " (" + percent + "%)";
-    progressBar.style.width = percent + "%";
+    const p = Math.round((done / total) * 100);
+    $("progressText").textContent = "Выполнено " + done + " из " + total + " (" + p + "%)";
+    $("progressBar").style.width = p + "%";
   }
-
-  emptyText.classList.toggle("hidden", total > 0);
+  $("cheer").classList.toggle("hidden", !(total > 0 && done === total));
+  $("emptyText").classList.toggle("hidden", total > 0);
+  $("carryBtn").classList.toggle("hidden", total === done);
+  $("streak").textContent = "🔥 " + getStreak() + " дн. подряд";
 }
 
-addButton.addEventListener("click", function () {
-  const text = taskInput.value.trim();
-
-  if (text === "") {
-    return;
-  }
-
-  let start = "";
-  let end = "";
-  if (timeToggle.checked) {
-    start = startInput.value;
-    end = endInput.value;
-  }
-
+function addTask() {
+  const text = $("taskInput").value.trim();
+  if (!text) return;
+  const useTime = $("timeToggle").checked;
   tasks.push({
     text: text,
     date: currentDate,
-    start: start,
-    end: end,
+    start: useTime ? $("startInput").value : "",
+    end: useTime ? $("endInput").value : "",
+    priority: $("priority").value,
     done: false
   });
-  saveTasks();
+  save();
+  $("taskInput").value = "";
+  $("startInput").value = "";
+  $("endInput").value = "";
+  $("priority").value = "mid";
+  $("timeToggle").checked = false;
+  $("timeFields").classList.add("hidden");
   renderDay();
+}
+$("addButton").onclick = addTask;
+$("taskInput").onkeydown = (e) => { if (e.key === "Enter") addTask(); };
 
-  taskInput.value = "";
-  startInput.value = "";
-  endInput.value = "";
-  timeToggle.checked = false;
-  timeFields.classList.add("hidden");
-});
+$("carryBtn").onclick = () => {
+  const next = addDays(currentDate, 1);
+  let n = 0;
+  tasks.forEach((t) => {
+    if (t.date === currentDate && !t.done) {
+      t.date = next;
+      n++;
+    }
+  });
+  save();
+  renderDay();
+  alert("Перенесено задач на следующий день: " + n);
+};
 
-// ===== Вкладка «Неделя» =====
+// ===== Неделя =====
 function renderWeek() {
-  weekList.innerHTML = "";
-
-  // находим понедельник той недели, которую смотрим
-  const dayOfWeek = (fromISO(currentDate).getDay() + 6) % 7;
-  const monday = addDays(currentDate, -dayOfWeek);
+  $("weekList").innerHTML = "";
+  const monday = addDays(currentDate, -((fromISO(currentDate).getDay() + 6) % 7));
 
   for (let i = 0; i < 7; i++) {
     const iso = addDays(monday, i);
-    const dayTasks = sortByTime(
-      tasks.filter(function (t) {
-        return t.date === iso;
-      })
-    );
-    const doneCount = dayTasks.filter(function (t) {
-      return t.done;
-    }).length;
+    const list = sortTasks(tasks.filter((t) => t.date === iso));
+    const done = list.filter((t) => t.done).length;
 
-    const card = document.createElement("div");
-    card.className = "week-card";
-    if (iso === todayISO) {
-      card.classList.add("today");
-    }
+    const card = el("div", "week-card clickable");
+    if (iso === todayISO) card.classList.add("today");
 
-    const head = document.createElement("div");
-    head.className = "week-head";
-
-    const title = document.createElement("span");
-    title.textContent = dayName(iso);
-
-    const count = document.createElement("span");
-    count.className = "week-count";
-    count.textContent = dayTasks.length > 0 ? doneCount + "/" + dayTasks.length : "";
-
-    head.appendChild(title);
-    head.appendChild(count);
+    const head = el("div", "week-head");
+    head.append(el("span", null, dayName(iso)), el("span", "muted", list.length ? done + "/" + list.length : ""));
     card.appendChild(head);
 
-    if (dayTasks.length === 0) {
-      const empty = document.createElement("p");
-      empty.className = "week-empty";
-      empty.textContent = "Свободный день";
-      card.appendChild(empty);
+    if (list.length === 0) {
+      card.appendChild(el("p", "muted", "Свободный день"));
     } else {
-      dayTasks.forEach(function (t) {
-        const row = document.createElement("div");
-        row.className = "week-task";
-        if (t.done) {
-          row.classList.add("completed");
-        }
-        row.textContent = (t.start ? t.start + " " : "") + t.text;
+      list.forEach((t) => {
+        const row = el("div", "week-task", (t.start ? t.start + " " : "") + t.text);
+        if (t.done) row.classList.add("completed");
         card.appendChild(row);
       });
     }
 
-    // клик по карточке открывает этот день
-    card.addEventListener("click", function () {
-      currentDate = iso;
-      showTab("day");
-    });
-
-    weekList.appendChild(card);
+    card.onclick = () => { currentDate = iso; showTab("day"); };
+    $("weekList").appendChild(card);
   }
 }
 
-// ===== Вкладка «Статистика» =====
+// ===== Пары =====
+const DAYS = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"];
+
+function renderClasses() {
+  const box = $("classList");
+  box.innerHTML = "";
+
+  DAYS.forEach((name, i) => {
+    const list = classes.filter((c) => c.day === i).sort((a, b) => a.start.localeCompare(b.start));
+    if (list.length === 0) return;
+
+    const card = el("div", "week-card");
+    card.appendChild(el("div", "week-head", name));
+    list.forEach((c) => {
+      const row = el("div", "class-row");
+      const del = el("button", "small-btn del", "🗑");
+      del.onclick = () => {
+        classes = classes.filter((x) => x !== c);
+        save();
+        renderClasses();
+      };
+      row.append(el("span", null, timeText(c.start, c.end) + " " + c.name), del);
+      card.appendChild(row);
+    });
+    box.appendChild(card);
+  });
+
+  if (!box.children.length) box.appendChild(el("p", "empty", "Расписание пустое. Добавь первую пару! 🎓"));
+}
+
+$("addClass").onclick = () => {
+  const name = $("clsName").value.trim();
+  const start = $("clsStart").value;
+  if (!name || !start) {
+    alert("Укажи предмет и время начала");
+    return;
+  }
+  classes.push({ name: name, day: Number($("clsDay").value), start: start, end: $("clsEnd").value });
+  save();
+  $("clsName").value = "";
+  $("clsStart").value = "";
+  $("clsEnd").value = "";
+  renderClasses();
+};
+
+// ===== Экзамены =====
+function renderExams() {
+  const ul = $("examList");
+  ul.innerHTML = "";
+
+  [...exams].sort((a, b) => a.date.localeCompare(b.date)).forEach((ex) => {
+    const diff = Math.round((fromISO(ex.date) - fromISO(todayISO)) / 86400000);
+    let txt = "Прошёл";
+    if (diff > 0) txt = "Осталось " + diff + " дн.";
+    if (diff === 0) txt = "Сегодня! 💪";
+
+    const li = el("li", diff < 0 ? "completed" : diff <= 3 ? "p-high" : "p-low");
+    const info = el("div", "task-text");
+    info.appendChild(el("b", null, ex.name));
+    info.appendChild(el("div", "muted", fromISO(ex.date).toLocaleDateString("ru-RU", { day: "numeric", month: "long" }) + " · " + txt));
+
+    const del = el("button", "small-btn del", "🗑");
+    del.onclick = () => {
+      exams = exams.filter((x) => x !== ex);
+      save();
+      renderExams();
+    };
+    li.append(info, del);
+    ul.appendChild(li);
+  });
+
+  if (!exams.length) ul.appendChild(el("p", "empty", "Экзаменов пока нет 🙌"));
+}
+
+$("addExam").onclick = () => {
+  const name = $("examName").value.trim();
+  const date = $("examDate").value;
+  if (!name || !date) {
+    alert("Укажи название и дату");
+    return;
+  }
+  exams.push({ name: name, date: date });
+  save();
+  $("examName").value = "";
+  $("examDate").value = "";
+  renderExams();
+};
+
+// ===== Таймер Помодоро =====
+let settings = { work: 25, rest: 5 };
+try {
+  const saved = JSON.parse(localStorage.getItem("timerSettings"));
+  if (saved && saved.work >= 1 && saved.rest >= 1) settings = saved;
+} catch (e) {}
+
+const LABELS = { work: "📖 Учёба", rest: "☕ Отдых" };
+let mode = "work";
+let left = settings.work * 60;
+let timerId = null;
+let pomodoros = 0;
+
+$("workMin").value = settings.work;
+$("restMin").value = settings.rest;
+
+function showTimer() {
+  const m = String(Math.floor(left / 60)).padStart(2, "0");
+  const s = String(left % 60).padStart(2, "0");
+  $("timerDisplay").textContent = m + ":" + s;
+  $("timerMode").textContent = LABELS[mode];
+  $("timerCount").textContent = "Завершено помидоров: " + pomodoros;
+  document.title = timerId ? m + ":" + s + " · Планировщик" : "Планировщик учёбы";
+}
+
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    o.frequency.value = 880;
+    o.connect(ctx.destination);
+    o.start();
+    setTimeout(() => { o.stop(); ctx.close(); }, 700);
+  } catch (e) {}
+}
+
+function stopTimer() {
+  clearInterval(timerId);
+  timerId = null;
+  $("timerStart").textContent = "▶ Старт";
+}
+
+function tick() {
+  left--;
+  if (left <= 0) {
+    beep();
+    if (mode === "work") pomodoros++;
+    mode = mode === "work" ? "rest" : "work";
+    left = settings[mode] * 60;
+    stopTimer();
+  }
+  showTimer();
+}
+
+// читаем минуты из полей, проверяем и сохраняем
+function applySettings() {
+  let w = Math.round(Number($("workMin").value));
+  let r = Math.round(Number($("restMin").value));
+
+  if (!(w >= 1)) w = settings.work;
+  if (!(r >= 1)) r = settings.rest;
+  w = Math.min(w, 180);
+  r = Math.min(r, 60);
+
+  settings = { work: w, rest: r };
+  $("workMin").value = w;
+  $("restMin").value = r;
+  localStorage.setItem("timerSettings", JSON.stringify(settings));
+
+  // если таймер не идёт, сразу показываем новое время
+  if (!timerId) {
+    left = settings[mode] * 60;
+  }
+  showTimer();
+}
+$("workMin").onchange = applySettings;
+$("restMin").onchange = applySettings;
+
+$("timerStart").onclick = () => {
+  if (timerId) {
+    stopTimer();
+  } else {
+    timerId = setInterval(tick, 1000);
+    $("timerStart").textContent = "⏸ Пауза";
+  }
+  showTimer();
+};
+
+$("timerReset").onclick = () => {
+  stopTimer();
+  mode = "work";
+  left = settings.work * 60;
+  showTimer();
+};
+// ===== Статистика =====
 function renderStats() {
   const total = tasks.length;
-  const doneCount = tasks.filter(function (t) {
-    return t.done;
-  }).length;
-  const percent = total === 0 ? 0 : Math.round((doneCount / total) * 100);
-
-  const daysWithTasks = new Set(
-    tasks.map(function (t) {
-      return t.date;
-    })
-  ).size;
-
+  const done = tasks.filter((t) => t.done).length;
   const items = [
-    { number: total, name: "Всего задач" },
-    { number: doneCount, name: "Выполнено" },
-    { number: total - doneCount, name: "Осталось" },
-    { number: percent + "%", name: "Общий прогресс" },
-    { number: daysWithTasks, name: "Дней с планами" }
+    [total, "Всего задач"],
+    [done, "Выполнено"],
+    [total - done, "Осталось"],
+    [(total ? Math.round((done / total) * 100) : 0) + "%", "Общий прогресс"],
+    ["🔥 " + getStreak(), "Серия дней"],
+    [exams.length, "Экзаменов впереди"]
   ];
-
-  statsBox.innerHTML = "";
-
-  items.forEach(function (item) {
-    const card = document.createElement("div");
-    card.className = "stat-card";
-
-    const number = document.createElement("p");
-    number.className = "stat-number";
-    number.textContent = item.number;
-
-    const name = document.createElement("p");
-    name.className = "stat-name";
-    name.textContent = item.name;
-
-    card.appendChild(number);
-    card.appendChild(name);
-    statsBox.appendChild(card);
+  $("statsBox").innerHTML = "";
+  items.forEach((it) => {
+    const card = el("div", "stat-card");
+    card.append(el("p", "stat-number", it[0]), el("p", "stat-name", it[1]));
+    $("statsBox").appendChild(card);
   });
 }
 
 // ===== Запуск =====
-saveTasks();
-renderDay();
+applyTheme();
+save();
+showTab("day");

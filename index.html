@@ -4,21 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Планировщик учёбы</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app">
     <header>
       <h1>📚 Мой планировщик</h1>
+      <div class="top">
+        <span id="streak" class="streak">🔥 0</span>
+        <button id="themeBtn" class="icon-btn">🌙</button>
+      </div>
     </header>
 
     <nav class="tabs">
       <button class="tab active" data-tab="day">📅 День</button>
       <button class="tab" data-tab="week">🗓 Неделя</button>
+      <button class="tab" data-tab="classes">🎓 Пары</button>
+      <button class="tab" data-tab="exams">📝 Экзамены</button>
+      <button class="tab" data-tab="timer">⏱ Таймер</button>
       <button class="tab" data-tab="stats">📊 Статистика</button>
     </nav>
 
-    <!-- ВКЛАДКА: ДЕНЬ -->
+    <!-- ДЕНЬ -->
     <section id="dayTab">
       <div class="day-nav">
         <button id="prevDay" class="nav-btn">◀</button>
@@ -30,43 +38,87 @@
       </div>
       <button id="todayBtn" class="today-btn">Перейти к сегодня</button>
 
+      <div id="dayClasses" class="day-classes hidden"></div>
+
       <div class="progress-box">
         <p id="progressText">Нет задач</p>
-        <div class="progress">
-          <div id="progressBar" class="progress-bar"></div>
-        </div>
+        <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
       </div>
+      <div id="cheer" class="cheer hidden">🎉 Все задачи выполнены! Ты молодец!</div>
 
       <div class="form">
-        <input type="text" id="taskInput" placeholder="Напиши здесь...">
-
-        <label class="check">
-          <input type="checkbox" id="timeToggle">
-          ⏰ Указать время
-        </label>
-
-        <div id="timeFields" class="hidden">
-          <input type="time" id="startInput">
-          <span>—</span>
-          <input type="time" id="endInput">
+        <input type="text" id="taskInput" class="full" placeholder="Напиши здесь...">
+        <select id="priority" class="full">
+          <option value="high">🔴 Важно</option>
+          <option value="mid" selected>🟡 Средне</option>
+          <option value="low">🟢 Не срочно</option>
+        </select>
+        <label class="check"><input type="checkbox" id="timeToggle"> ⏰ Указать время</label>
+        <div id="timeFields" class="row hidden">
+          <input type="time" id="startInput"><span>—</span><input type="time" id="endInput">
         </div>
-
-        <button id="addButton">➕ Добавить</button>
+        <button id="addButton" class="main-btn">➕ Добавить</button>
       </div>
 
       <ul id="taskList"></ul>
       <p id="emptyText" class="empty">На этот день задач нет. Добавь первую! ✨</p>
+      <button id="carryBtn" class="soft-btn hidden">➡️ Перенести невыполненные на следующий день</button>
     </section>
 
-    <!-- ВКЛАДКА: НЕДЕЛЯ -->
-    <section id="weekTab" class="hidden">
-      <div id="weekList"></div>
+    <!-- НЕДЕЛЯ -->
+    <section id="weekTab" class="hidden"><div id="weekList"></div></section>
+
+    <!-- ПАРЫ -->
+    <section id="classesTab" class="hidden">
+      <div class="form">
+        <input type="text" id="clsName" class="full" placeholder="Предмет, например: Математика">
+        <select id="clsDay" class="full">
+          <option value="0">Понедельник</option><option value="1">Вторник</option>
+          <option value="2">Среда</option><option value="3">Четверг</option>
+          <option value="4">Пятница</option><option value="5">Суббота</option>
+          <option value="6">Воскресенье</option>
+        </select>
+        <div class="row">
+          <input type="time" id="clsStart"><span>—</span><input type="time" id="clsEnd">
+        </div>
+        <button id="addClass" class="main-btn">➕ Добавить пару</button>
+      </div>
+      <div id="classList"></div>
     </section>
 
-    <!-- ВКЛАДКА: СТАТИСТИКА -->
-    <section id="statsTab" class="hidden">
-      <div id="statsBox" class="stats-grid"></div>
+    <!-- ЭКЗАМЕНЫ -->
+    <section id="examsTab" class="hidden">
+      <div class="form">
+        <input type="text" id="examName" class="full" placeholder="Название экзамена">
+        <input type="date" id="examDate" class="full">
+        <button id="addExam" class="main-btn">➕ Добавить экзамен</button>
+      </div>
+      <ul id="examList"></ul>
     </section>
+
+    <!-- ТАЙМЕР -->
+    <section id="timerTab" class="hidden">
+      <div class="timer-box">
+        <p id="timerMode">📖 Учёба</p>
+        <p id="timerDisplay" class="timer-display">25:00</p>
+        <div class="row center">
+          <button id="timerStart" class="main-btn small">▶ Старт</button>
+          <button id="timerReset" class="soft-btn">↺ Сброс</button>
+        </div>
+        <div class="timer-settings">
+          <label>📖 Учёба (мин)
+            <input type="number" id="workMin" min="1" max="180">
+          </label>
+          <label>☕ Отдых (мин)
+            <input type="number" id="restMin" min="1" max="60">
+          </label>
+        </div>
+        <p id="timerCount" class="empty"></p>
+      </div>
+    </section>
+
+    <!-- СТАТИСТИКА -->
+    <section id="statsTab" class="hidden"><div id="statsBox" class="stats-grid"></div></section>
   </div>
 
   <script src="script.js"></script>
