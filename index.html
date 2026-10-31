@@ -122,6 +122,17 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
 .cal-d.t{border-color:var(--b1)}
 .cal-d.s{background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff}
 .cal-d.has::after{content:"";position:absolute;bottom:2px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:#fa5252}
+.pet-box{text-align:center}
+.pet-box svg{width:240px;max-width:70%;animation:bob 2.5s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.pet-msg{text-align:center;font-weight:bold;color:var(--accent);margin:8px 0 16px}
+.opt-title{margin:18px 0 8px;font-size:14px;color:var(--muted)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{min-width:54px;padding:10px;border:2px solid var(--line);border-radius:12px;background:var(--card);font-size:20px;cursor:pointer;color:var(--text)}
+.opt.on{border-color:var(--b1);background:var(--soft)}
+.opt.locked{opacity:.4;cursor:not-allowed;font-size:12px}
+.swatch{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer}
+.swatch.on{border-color:var(--text)}
 </style>
 </head>
 <body>
@@ -160,6 +171,7 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
     <button class="tab" data-tab="classes">🎓 Пары</button>
     <button class="tab" data-tab="exams">📝 Экзамены</button>
     <button class="tab" data-tab="timer">⏱ Таймер</button>
+    <button class="tab" data-tab="pet">🐾 Питомец</button>
     <button class="tab" data-tab="game">🎮 Игра</button>
     <button class="tab" data-tab="stats">📊 Статистика</button>
   </nav>
@@ -238,6 +250,13 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
       </div>
       <p id="timerCount" class="empty"></p>
     </div>
+  </section>
+
+  <section id="petTab" class="hidden">
+    <div id="petBox" class="pet-box"></div>
+    <p id="petMsg" class="pet-msg"></p>
+    <div id="petStats" class="stats-grid"></div>
+    <div id="petOpts"></div>
   </section>
 
   <section id="gameTab" class="hidden">
@@ -342,11 +361,11 @@ function confetti() {
 }
 
 // ===== Вкладки =====
-const TABS = ["day", "week", "classes", "exams", "timer", "game", "stats"];
+const TABS = ["day", "week", "classes", "exams", "timer", "pet", "game", "stats"];
 function showTab(name) {
   TABS.forEach((t) => $(t + "Tab").classList.toggle("hidden", t !== name));
   document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
-  ({ day: renderDay, week: renderWeek, classes: renderClasses, exams: renderExams, timer: showTimer, game: initGame, stats: renderStats })[name]();
+  ({ day: renderDay, week: renderWeek, classes: renderClasses, exams: renderExams, timer: showTimer, pet: renderPet, game: initGame, stats: renderStats })[name]();
 }
 document.querySelectorAll(".tab").forEach((b) => { b.onclick = () => showTab(b.dataset.tab); });
 
@@ -737,6 +756,104 @@ function renderStats() {
   });
 }
 
+// ===== Питомец =====
+const COLORS = ["#ffa94d", "#adb5bd", "#f783ac", "#74c0fc", "#8ce99a", "#b197fc"];
+// [id, значок, сколько дней рекорда серии нужно]
+const OUT = {
+  head: [["", "🚫", 0], ["grad", "🎓", 0], ["party", "🎉", 1], ["crown", "👑", 14], ["top", "🎩", 30]],
+  face: [["", "🚫", 0], ["glass", "👓", 3], ["sun", "😎", 7]],
+  neck: [["", "🚫", 0], ["bow", "🎀", 3], ["scarf", "🧣", 7]]
+};
+const HEAD = {
+  grad: `<path d="M52 50 L100 32 L148 50 L100 68 Z" fill="#2b2b3a"/><path d="M76 60 v14 q24 12 48 0 v-14" fill="#3d3d52"/><path d="M144 52 v22" stroke="#fcc419" stroke-width="3"/><circle cx="144" cy="76" r="4" fill="#fcc419"/>`,
+  party: `<path d="M76 54 L100 6 L124 54 Z" fill="#f783ac"/><path d="M84 40 H116 M90 28 H110" stroke="#fff" stroke-width="4"/><circle cx="100" cy="6" r="6" fill="#fcc419"/>`,
+  crown: `<path d="M70 52 L68 22 L86 38 L100 16 L114 38 L132 22 L130 52 Z" fill="#fcc419" stroke="#e67700" stroke-width="3" stroke-linejoin="round"/>`,
+  top: `<rect x="76" y="14" width="48" height="38" rx="4" fill="#2b2b3a"/><rect x="60" y="48" width="80" height="9" rx="4" fill="#2b2b3a"/><rect x="76" y="40" width="48" height="8" fill="#e03131"/>`
+};
+const FACE = {
+  glass: `<circle cx="80" cy="99" r="14" fill="#fff" fill-opacity=".35" stroke="#2b2b3a" stroke-width="3.5"/><circle cx="120" cy="99" r="14" fill="#fff" fill-opacity=".35" stroke="#2b2b3a" stroke-width="3.5"/><path d="M94 99 H106" stroke="#2b2b3a" stroke-width="3.5"/>`,
+  sun: `<rect x="64" y="88" width="32" height="20" rx="8" fill="#111"/><rect x="104" y="88" width="32" height="20" rx="8" fill="#111"/><path d="M96 96 H104" stroke="#111" stroke-width="4"/>`
+};
+const NECK = {
+  bow: `<path d="M100 160 L76 148 V172 Z M100 160 L124 148 V172 Z" fill="#e03131"/><circle cx="100" cy="160" r="6" fill="#c92a2a"/>`,
+  scarf: `<path d="M56 152 Q100 176 144 152 V170 Q100 194 56 170 Z" fill="#4c6ef5"/><rect x="120" y="164" width="20" height="36" rx="4" fill="#3b5bdb"/>`
+};
+let pet = { color: COLORS[0], head: "grad", face: "", neck: "" };
+try { Object.assign(pet, JSON.parse(localStorage.getItem("pet")) || {}); } catch (e) {}
+const savePet = () => localStorage.setItem("pet", JSON.stringify(pet));
+
+// лучший результат серии за всё время (хранится, чтобы одежда не пропадала)
+function bestStreak() {
+  const ds = [...new Set(tasks.filter((t) => t.done).map((t) => t.date))].sort();
+  let best = 0, cur = 0, prev = null;
+  ds.forEach((d) => { cur = prev && addDays(prev, 1) === d ? cur + 1 : 1; best = Math.max(best, cur); prev = d; });
+  best = Math.max(best, Number(localStorage.getItem("petBest")) || 0);
+  localStorage.setItem("petBest", best);
+  return best;
+}
+function petSVG(mood) {
+  const d = "#2b2b3a";
+  const eyes = mood === "happy"
+    ? `<path d="M70 100 Q80 88 90 100 M110 100 Q120 88 130 100" stroke="${d}" stroke-width="5" fill="none" stroke-linecap="round"/>`
+    : mood === "worried"
+    ? `<circle cx="80" cy="98" r="7" fill="${d}"/><circle cx="120" cy="98" r="7" fill="${d}"/><circle cx="82" cy="95" r="2.5" fill="#fff"/><circle cx="122" cy="95" r="2.5" fill="#fff"/>`
+    : `<path d="M70 100 H90 M110 100 H130" stroke="${d}" stroke-width="5" stroke-linecap="round"/>`;
+  const mouth = mood === "happy"
+    ? `<path d="M88 118 Q100 134 112 118 Z" fill="#e8590c" stroke="${d}" stroke-width="2" stroke-linejoin="round"/>`
+    : mood === "worried"
+    ? `<path d="M92 124 Q100 118 108 124" stroke="${d}" stroke-width="4" fill="none" stroke-linecap="round"/>`
+    : `<path d="M90 128 Q100 118 110 128" stroke="${d}" stroke-width="4" fill="none" stroke-linecap="round"/><text x="140" y="56" font-size="22" fill="#868e96">z</text><text x="152" y="42" font-size="16" fill="#868e96">z</text>`;
+  return `<svg viewBox="0 0 200 205" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="100" cy="168" rx="50" ry="34" fill="${pet.color}"/>
+    <ellipse cx="100" cy="174" rx="28" ry="22" fill="#fff" fill-opacity=".5"/>
+    <path d="M46 78 L52 30 L88 54 Z M154 78 L148 30 L112 54 Z" fill="${pet.color}"/>
+    <path d="M56 66 L58 42 L76 54 Z M144 66 L142 42 L124 54 Z" fill="#ffc9c9"/>
+    <circle cx="100" cy="100" r="62" fill="${pet.color}"/>
+    <circle cx="66" cy="114" r="8" fill="#ff8787" fill-opacity=".55"/><circle cx="134" cy="114" r="8" fill="#ff8787" fill-opacity=".55"/>
+    ${eyes}<ellipse cx="100" cy="110" rx="5" ry="3.5" fill="#e64980"/>${mouth}
+    ${FACE[pet.face] || ""}${NECK[pet.neck] || ""}${HEAD[pet.head] || ""}
+  </svg>`;
+}
+function renderPet() {
+  const best = bestStreak(), st = getStreak();
+  const mood = dayActive(todayISO) ? "happy" : st > 0 ? "worried" : "sad";
+  $("petBox").innerHTML = petSVG(mood);
+  $("petMsg").textContent = {
+    happy: "Ура! Серия идёт, так держать! 🎉",
+    worried: "Выполни хотя бы одну задачу сегодня, чтобы не потерять серию! 🔥",
+    sad: "Я скучаю... Выполни задачу, и начнём серию! 😴"
+  }[mood];
+  $("petStats").innerHTML = "";
+  [["🔥 " + st, "Серия дней"], ["🏆 " + best, "Рекорд серии"]].forEach((it) => {
+    const card = el("div", "stat-card");
+    card.append(el("p", "stat-number", it[0]), el("p", "stat-name", it[1]));
+    $("petStats").appendChild(card);
+  });
+  const box = $("petOpts");
+  box.innerHTML = "";
+  box.appendChild(el("div", "opt-title", "Цвет"));
+  const row = el("div", "opts");
+  COLORS.forEach((col) => {
+    const b = el("div", "swatch" + (pet.color === col ? " on" : ""));
+    b.style.background = col;
+    b.onclick = () => { pet.color = col; savePet(); renderPet(); };
+    row.appendChild(b);
+  });
+  box.appendChild(row);
+  [["head", "Головной убор"], ["face", "Очки"], ["neck", "На шею"]].forEach((gr) => {
+    box.appendChild(el("div", "opt-title", gr[1]));
+    const r = el("div", "opts");
+    OUT[gr[0]].forEach((o) => {
+      const open = best >= o[2];
+      const b = el("button", "opt" + (pet[gr[0]] === o[0] ? " on" : "") + (open ? "" : " locked"), open ? o[1] : "🔒 " + o[2] + " дн.");
+      if (open) b.onclick = () => { pet[gr[0]] = o[0]; savePet(); renderPet(); };
+      r.appendChild(b);
+    });
+    box.appendChild(r);
+  });
+  box.appendChild(el("p", "muted", "Новая одежда открывается за рекорд серии дней"));
+}
+
 // ===== Игра: найди пары =====
 const EM = ["🍎", "🚀", "🎧", "📚", "⚽", "🎮", "🌙", "🔥"];
 let gOpen = [], gMoves = 0, gLeft = 8, gLock = false;
@@ -920,7 +1037,13 @@ const D = [
 ["Неверная почта или пароль","Пошта немесе құпиясөз қате","Wrong email or password"],
 ["Эта почта уже зарегистрирована","Бұл пошта тіркелген","This email is already registered"],
 ["Пароль слишком короткий (минимум 6 символов)","Құпиясөз тым қысқа (кемінде 6 таңба)","Password too short (min. 6 characters)"],
-["Неправильная почта","Пошта дұрыс емес","Invalid email"],["Ошибка сохранения","Сақтау қатесі","Save error"]
+["Неправильная почта","Пошта дұрыс емес","Invalid email"],["Ошибка сохранения","Сақтау қатесі","Save error"],
+["🐾 Питомец","🐾 Жануар","🐾 Pet"],["Рекорд серии","Қатар рекорды","Best streak"],["Цвет","Түсі","Color"],
+["Головной убор","Бас киім","Headwear"],["Очки","Көзілдірік","Glasses"],["На шею","Мойынға","Neck"],
+["Новая одежда открывается за рекорд серии дней","Жаңа киім күн қатары рекордына қарай ашылады","New outfits unlock with your best streak"],
+["Ура! Серия идёт, так держать! 🎉","Ура! Қатар жалғасып жатыр, осылай жалғастыр! 🎉","Yay! Your streak is going, keep it up! 🎉"],
+["Выполни хотя бы одну задачу сегодня, чтобы не потерять серию! 🔥","Қатар үзілмес үшін бүгін кемінде бір тапсырма орында! 🔥","Complete at least one task today to keep your streak! 🔥"],
+["Я скучаю... Выполни задачу, и начнём серию! 😴","Сағындым... Тапсырма орында, қатар бастаймыз! 😴","I miss you... Complete a task and we start a streak! 😴"]
 ];
 const DICT = {};
 D.forEach((r) => { DICT[r[0]] = [r[1], r[2]]; });
@@ -934,7 +1057,8 @@ const PAT = [
   [/^🏆 Рекорд: (.+)$/, "🏆 Рекорд: $1", "🏆 Best: $1"],
   [/^🎉 Победа! Ходов: (\d+)$/, "🎉 Жеңіс! Жүріс: $1", "🎉 You win! Moves: $1"],
   [/^через (\d+) мин\.$/, "$1 мин кейін", "in $1 min"],
-  [/^через (\d+) ч\.$/, "$1 сағаттан кейін", "in $1 h"]
+  [/^через (\d+) ч\.$/, "$1 сағаттан кейін", "in $1 h"],
+  [/^🔒 (\d+) дн\.$/, "🔒 $1 күн", "🔒 $1 days"]
 ];
 let LANG = "ru";
 function tr(s) {
