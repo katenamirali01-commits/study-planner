@@ -100,18 +100,58 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
 .card{aspect-ratio:1;font-size:30px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;cursor:pointer;padding:0}
 .card.open{background:var(--soft);color:var(--text)}
 .card.gone{opacity:.4;pointer-events:none}
+.acc{background:var(--soft);border-radius:14px;padding:14px;margin-top:12px}
+.acc p{margin:6px 0}
+.layout{display:flex;gap:20px;justify-content:center;align-items:flex-start;max-width:1250px;margin:20px auto}
+.layout .app{flex:0 1 600px;margin:0;width:100%}
+.side{display:none;flex:0 0 280px}
+@media(min-width:1100px){.side{display:block}}
+.side-card{background:var(--card);border-radius:20px;padding:18px;margin-bottom:16px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+.side-card h3{margin:0 0 10px;color:var(--accent);font-size:15px}
+.side-card .stat-card{padding:10px}
+.side-card .stat-number{font-size:24px}
+.clock-time{font-size:44px;font-weight:bold;color:var(--accent);margin:0;text-align:center}
+.clock .muted{text-align:center;text-transform:capitalize;margin:4px 0 0}
+.side-when{margin-top:6px;color:var(--accent);font-weight:bold}
+.cal-head{display:flex;justify-content:space-between;align-items:center}
+.cal-head b{text-transform:capitalize}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:13px;margin-top:10px}
+.cal-h{color:var(--muted);font-size:11px;padding-bottom:4px}
+.cal-d{padding:6px 0;border-radius:8px;cursor:pointer;position:relative;border:2px solid transparent}
+.cal-d:hover{background:var(--soft)}
+.cal-d.t{border-color:var(--b1)}
+.cal-d.s{background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff}
+.cal-d.has::after{content:"";position:absolute;bottom:2px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:#fa5252}
 </style>
 </head>
 <body>
+<div class="layout">
+<aside class="side" id="sideL">
+  <div class="side-card clock"><p id="clockTime" class="clock-time"></p><p id="clockDate" class="muted"></p></div>
+  <div class="side-card">
+    <div class="cal-head"><button id="calPrev" class="icon-btn">‹</button><b id="calTitle"></b><button id="calNext" class="icon-btn">›</button></div>
+    <div id="calGrid" class="cal"></div>
+  </div>
+</aside>
 <div class="app">
   <header>
     <h1>📚 Мой планировщик</h1>
     <div class="top">
       <span id="streak" class="streak">🔥 0</span>
+      <button id="accBtn" class="icon-btn">👤</button>
       <button id="themeBtn" class="icon-btn">🌙</button>
       <select id="colorSel"><option value="">🔵</option><option value="c-green">🟢</option><option value="c-pink">🌸</option><option value="c-orange">🟠</option></select>
       <select id="langSel"><option value="ru">RU</option><option value="kk">ҚАЗ</option><option value="en">EN</option></select>
     </div>
+  <div id="accBox" class="acc hidden">
+    <p id="accMsg" class="muted"></p>
+    <div id="accForm">
+      <input type="email" id="accEmail" class="full" placeholder="Почта">
+      <input type="password" id="accPass" class="full" placeholder="Пароль (мин. 6 символов)">
+      <div class="row center"><button id="accLogin" class="main-btn small">Войти</button><button id="accSignup" class="soft-btn">Регистрация</button></div>
+    </div>
+    <div id="accIn" class="hidden"><p><span>Вы вошли как</span> <b id="accWho"></b></p><button id="accLogout" class="soft-btn">Выйти</button></div>
+  </div>
   </header>
 
   <nav class="tabs">
@@ -208,6 +248,12 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
 
   <section id="statsTab" class="hidden"><div id="statsBox" class="stats-grid"></div></section>
 </div>
+<aside class="side" id="sideR">
+  <div class="side-card"><h3>⏰ Ближайшая пара</h3><div id="nextClass"></div></div>
+  <div class="side-card"><h3>📝 Ближайший экзамен</h3><div id="nextExam"></div></div>
+  <div class="side-card"><h3>📊 Сегодня</h3><div id="todaySum" class="stats-grid"></div></div>
+</aside>
+</div>
 
 <script>
 let LOC = "ru-RU";
@@ -239,11 +285,16 @@ const timeText = (s, e) => (e ? s + "–" + e : s);
 function load(key) { try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; } }
 let tasks = load("tasks"), exams = load("exams"), classes = load("classes"), gpa = load("gpa");
 tasks.forEach((t) => { if (!t.date) t.date = todayISO; if (!t.priority) t.priority = "mid"; });
-function save() {
+function saveLocal() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
   localStorage.setItem("exams", JSON.stringify(exams));
   localStorage.setItem("classes", JSON.stringify(classes));
   localStorage.setItem("gpa", JSON.stringify(gpa));
+}
+function save() {
+  saveLocal();
+  renderSide();
+  if (window.cloudSave) window.cloudSave();
 }
 const PR = { high: 0, mid: 1, low: 2 };
 function sortTasks(list) {
@@ -362,6 +413,7 @@ function renderDay() {
   $("emptyText").classList.toggle("hidden", total > 0);
   $("carryBtn").classList.toggle("hidden", total === done);
   $("streak").textContent = "🔥 " + getStreak() + " дн. подряд";
+  renderSide();
 }
 
 function addTask() {
@@ -734,6 +786,95 @@ function flip(b, e) {
 function initGame() { if (!$("board").children.length) newGame(); else showGameInfo(); }
 $("gameNew").onclick = newGame;
 
+// ===== Боковые панели (на широком экране) =====
+function tickClock() {
+  const d = new Date();
+  $("clockTime").textContent = d.toLocaleTimeString(LOC, { hour: "2-digit", minute: "2-digit" });
+  $("clockDate").textContent = d.toLocaleDateString(LOC, { weekday: "long", day: "numeric", month: "long" });
+}
+setInterval(tickClock, 1000);
+function shiftMonth(k) {
+  const d = fromISO(currentDate), t = new Date(d.getFullYear(), d.getMonth() + k, 1);
+  const dim = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+  t.setDate(Math.min(d.getDate(), dim));
+  currentDate = toISO(t);
+  showTab(document.querySelector(".tab.active").dataset.tab);
+}
+$("calPrev").onclick = () => shiftMonth(-1);
+$("calNext").onclick = () => shiftMonth(1);
+
+function nextClassInfo() {
+  const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+  for (let k = 0; k < 7; k++) {
+    const wd = (now.getDay() + 6 + k) % 7;
+    const list = classes.filter((c) => c.day === wd).sort((a, b) => a.start.localeCompare(b.start));
+    const c = list.find((x) => k > 0 || mins(x.start) > nowMin);
+    if (c) return { c: c, k: k, wd: wd, diff: mins(c.start) - nowMin };
+  }
+  return null;
+}
+function renderSide() {
+  tickClock();
+  // календарь месяца
+  const d = fromISO(currentDate), y = d.getFullYear(), m = d.getMonth();
+  $("calTitle").textContent = new Date(y, m, 1).toLocaleDateString(LOC, { month: "long", year: "numeric" });
+  const g = $("calGrid");
+  g.innerHTML = "";
+  SHORT.forEach((x) => g.appendChild(el("div", "cal-h", x)));
+  const first = (new Date(y, m, 1).getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
+  for (let i = 0; i < first; i++) g.appendChild(el("div"));
+  for (let n = 1; n <= days; n++) {
+    const iso = toISO(new Date(y, m, n));
+    const c = el("div", "cal-d", String(n));
+    if (iso === todayISO) c.classList.add("t");
+    if (iso === currentDate) c.classList.add("s");
+    if (tasks.some((t) => t.date === iso)) c.classList.add("has");
+    c.onclick = () => { currentDate = iso; showTab("day"); };
+    g.appendChild(c);
+  }
+  // ближайшая пара
+  const nc = $("nextClass");
+  nc.innerHTML = "";
+  const r = nextClassInfo();
+  if (!r) {
+    nc.appendChild(el("p", "muted", "Ближайших пар нет"));
+  } else {
+    nc.appendChild(el("b", null, r.c.name));
+    nc.appendChild(el("div", "muted", timeText(r.c.start, r.c.end) + (r.c.room ? " · 🚪 " + r.c.room : "")));
+    const when = r.k === 0 ? (r.diff < 60 ? "через " + r.diff + " мин." : "через " + Math.round(r.diff / 60) + " ч.") : r.k === 1 ? "Завтра" : DAYS[r.wd];
+    nc.appendChild(el("div", "side-when", when));
+  }
+  // ближайший экзамен
+  const ne = $("nextExam");
+  ne.innerHTML = "";
+  const ex = exams.filter((e) => e.date >= todayISO).sort((a, b) => a.date.localeCompare(b.date))[0];
+  if (!ex) {
+    ne.appendChild(el("p", "muted", "Экзаменов пока нет 🙌"));
+  } else {
+    const diff = Math.round((fromISO(ex.date) - fromISO(todayISO)) / 86400000);
+    ne.appendChild(el("b", null, ex.name));
+    ne.appendChild(el("div", "side-when", diff > 0 ? "Осталось " + diff + " дн." : "Сегодня! 💪"));
+  }
+  // итоги сегодня
+  const tl = tasks.filter((t) => t.date === todayISO), dn = tl.filter((t) => t.done).length;
+  $("todaySum").innerHTML = "";
+  [[dn + "/" + tl.length, "Выполнено"], [tl.length - dn, "Осталось"]].forEach((it) => {
+    const card = el("div", "stat-card");
+    card.append(el("p", "stat-number", it[0]), el("p", "stat-name", it[1]));
+    $("todaySum").appendChild(card);
+  });
+}
+
+// ===== Связь с облаком (аккаунт) =====
+window.planner = {
+  get: () => ({ tasks, exams, classes }),
+  set: (d) => {
+    tasks = d.tasks || []; exams = d.exams || []; classes = d.classes || [];
+    saveLocal();
+    showTab(document.querySelector(".tab.active").dataset.tab);
+  }
+};
+
 // ===== Язык и цвет =====
 const D = [
 ["📚 Мой планировщик","📚 Менің жоспарлаушым","📚 My Planner"],["📅 День","📅 Күн","📅 Day"],["🗓 Неделя","🗓 Апта","🗓 Week"],
@@ -770,7 +911,16 @@ const D = [
 ["Укажи предмет и кредиты","Пән мен кредитті көрсет","Enter subject and credits"],
 ["🎮 Игра","🎮 Ойын","🎮 Game"],["🔄 Новая игра","🔄 Жаңа ойын","🔄 New game"],["Удалить пару?","Сабақты өшіру керек пе?","Delete this class?"],
 ["Аудитория, например: F304","Аудитория, мысалы: F304","Room, e.g. F304"],["⏱ Выбрать время пары","⏱ Сабақ уақытын таңда","⏱ Pick class time"],
-["Пн","Дс","Mo"],["Вт","Сс","Tu"],["Ср","Ср","We"],["Чт","Бс","Th"],["Пт","Жм","Fr"],["Сб","Сб","Sa"],["Вс","Жс","Su"]
+["Пн","Дс","Mo"],["Вт","Сс","Tu"],["Ср","Ср","We"],["Чт","Бс","Th"],["Пт","Жм","Fr"],["Сб","Сб","Sa"],["Вс","Жс","Su"],
+["⏰ Ближайшая пара","⏰ Жақын сабақ","⏰ Next class"],["📝 Ближайший экзамен","📝 Жақын емтихан","📝 Next exam"],
+["📊 Сегодня","📊 Бүгін","📊 Today"],["Ближайших пар нет","Жақын сабақ жоқ","No upcoming classes"],
+["Почта","Пошта","Email"],["Пароль (мин. 6 символов)","Құпиясөз (кемінде 6 таңба)","Password (min. 6 characters)"],
+["Войти","Кіру","Log in"],["Регистрация","Тіркелу","Sign up"],["Выйти","Шығу","Log out"],["Вы вошли как","Сіз кірдіңіз:","Signed in as"],
+["Аккаунт ещё не настроен","Аккаунт әлі бапталмаған","Account is not set up yet"],
+["Неверная почта или пароль","Пошта немесе құпиясөз қате","Wrong email or password"],
+["Эта почта уже зарегистрирована","Бұл пошта тіркелген","This email is already registered"],
+["Пароль слишком короткий (минимум 6 символов)","Құпиясөз тым қысқа (кемінде 6 таңба)","Password too short (min. 6 characters)"],
+["Неправильная почта","Пошта дұрыс емес","Invalid email"],["Ошибка сохранения","Сақтау қатесі","Save error"]
 ];
 const DICT = {};
 D.forEach((r) => { DICT[r[0]] = [r[1], r[2]]; });
@@ -782,7 +932,9 @@ const PAT = [
   [/^(\d+) кр\.$/, "$1 кр.", "$1 cr."],
   [/^🎯 Ходы: (\d+)$/, "🎯 Жүріс: $1", "🎯 Moves: $1"],
   [/^🏆 Рекорд: (.+)$/, "🏆 Рекорд: $1", "🏆 Best: $1"],
-  [/^🎉 Победа! Ходов: (\d+)$/, "🎉 Жеңіс! Жүріс: $1", "🎉 You win! Moves: $1"]
+  [/^🎉 Победа! Ходов: (\d+)$/, "🎉 Жеңіс! Жүріс: $1", "🎉 You win! Moves: $1"],
+  [/^через (\d+) мин\.$/, "$1 мин кейін", "in $1 min"],
+  [/^через (\d+) ч\.$/, "$1 сағаттан кейін", "in $1 h"]
 ];
 let LANG = "ru";
 function tr(s) {
@@ -832,6 +984,89 @@ showTab("day");
 applyColor();
 setLang(localStorage.getItem("lang") || "ru");
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+// ВСТАВЬ СЮДА СВОЙ firebaseConfig из консоли Firebase (замени весь этот блок)
+const firebaseConfig = {
+  apiKey: "PASTE_API_KEY",
+  authDomain: "PASTE",
+  projectId: "PASTE",
+  storageBucket: "PASTE",
+  messagingSenderId: "PASTE",
+  appId: "PASTE"
+};
+
+const g = (id) => document.getElementById(id);
+const msg = (t) => { g("accMsg").textContent = t; };
+g("accBtn").onclick = () => g("accBox").classList.toggle("hidden");
+
+if (firebaseConfig.apiKey.startsWith("PASTE")) {
+  msg("Аккаунт ещё не настроен");
+  g("accForm").classList.add("hidden");
+} else {
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  let user = null, unsub = null, timer = null, lastJson = "";
+
+  const keyOf = (x) => JSON.stringify([x.text || x.name, x.date, x.start, x.day]);
+  const merge = (a, b) => { const m = new Map(); [...(a || []), ...(b || [])].forEach((x) => m.set(keyOf(x), x)); return [...m.values()]; };
+
+  async function push() {
+    if (!user) return;
+    lastJson = JSON.stringify(window.planner.get());
+    try { await setDoc(doc(db, "users", user.uid), { data: lastJson }); }
+    catch (e) { msg("Ошибка сохранения"); }
+  }
+  window.cloudSave = () => { if (!user) return; clearTimeout(timer); timer = setTimeout(push, 800); };
+
+  const errors = {
+    "auth/invalid-credential": "Неверная почта или пароль",
+    "auth/wrong-password": "Неверная почта или пароль",
+    "auth/user-not-found": "Неверная почта или пароль",
+    "auth/email-already-in-use": "Эта почта уже зарегистрирована",
+    "auth/weak-password": "Пароль слишком короткий (минимум 6 символов)",
+    "auth/invalid-email": "Неправильная почта"
+  };
+  async function run(fn) {
+    msg("");
+    try { await fn(auth, g("accEmail").value.trim(), g("accPass").value); g("accPass").value = ""; }
+    catch (e) { msg(errors[e.code] || "Ошибка: " + e.code); }
+  }
+  g("accLogin").onclick = () => run(signInWithEmailAndPassword);
+  g("accSignup").onclick = () => run(createUserWithEmailAndPassword);
+  g("accLogout").onclick = async () => { await signOut(auth); window.planner.set({}); };
+
+  onAuthStateChanged(auth, async (u) => {
+    user = u;
+    if (unsub) { unsub(); unsub = null; }
+    g("accForm").classList.toggle("hidden", !!u);
+    g("accIn").classList.toggle("hidden", !u);
+    g("accBtn").textContent = u ? "☁️" : "👤";
+    if (!u) return;
+    g("accWho").textContent = u.email;
+    const ref = doc(db, "users", u.uid);
+    let cloud = {};
+    try {
+      const snap = await getDoc(ref);
+      if (snap.exists()) cloud = JSON.parse(snap.data().data);
+    } catch (e) { msg("Ошибка сохранения"); return; }
+    const loc = window.planner.get();
+    window.planner.set({ tasks: merge(loc.tasks, cloud.tasks), exams: merge(loc.exams, cloud.exams), classes: merge(loc.classes, cloud.classes) });
+    await push();
+    unsub = onSnapshot(ref, (s) => {
+      if (s.metadata.hasPendingWrites || !s.exists()) return;
+      const j = s.data().data;
+      if (j === lastJson) return;
+      lastJson = j;
+      try { window.planner.set(JSON.parse(j)); } catch (e) {}
+    });
+  });
+}
 </script>
 </body>
 </html>
