@@ -133,6 +133,11 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
 .opt.locked{opacity:.4;cursor:not-allowed;font-size:12px}
 .swatch{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer}
 .swatch.on{border-color:var(--text)}
+.fr-card{display:flex;align-items:center;gap:12px;background:var(--item);border-radius:14px;padding:10px 14px;margin-top:10px}
+.fr-pet{flex:0 0 80px}
+.fr-pet svg{width:80px;height:auto}
+.fr-info{flex:1}
+.fr-name{font-weight:bold}
 </style>
 </head>
 <body>
@@ -147,6 +152,7 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
 <div class="app">
   <header>
     <h1>📚 Мой планировщик</h1>
+    <p id="hello" class="muted" style="margin:0 0 8px"></p>
     <div class="top">
       <span id="streak" class="streak">🔥 0</span>
       <button id="accBtn" class="icon-btn">👤</button>
@@ -160,6 +166,8 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
       <input type="email" id="accEmail" class="full" placeholder="Почта">
       <input type="password" id="accPass" class="full" placeholder="Пароль (мин. 6 символов)">
       <div class="row center"><button id="accLogin" class="main-btn small">Войти</button><button id="accSignup" class="soft-btn">Регистрация</button></div>
+      <button id="accGoogle" class="soft-btn">🔵 Войти через Google</button>
+      <button id="accReset" class="soft-btn">Забыли пароль?</button>
     </div>
     <div id="accIn" class="hidden"><p><span>Вы вошли как</span> <b id="accWho"></b></p><button id="accLogout" class="soft-btn">Выйти</button></div>
   </div>
@@ -172,6 +180,7 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
     <button class="tab" data-tab="exams">📝 Экзамены</button>
     <button class="tab" data-tab="timer">⏱ Таймер</button>
     <button class="tab" data-tab="pet">🐾 Питомец</button>
+    <button class="tab" data-tab="friends">👥 Друзья</button>
     <button class="tab" data-tab="game">🎮 Игра</button>
     <button class="tab" data-tab="stats">📊 Статистика</button>
   </nav>
@@ -259,6 +268,19 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
     <div id="petOpts"></div>
   </section>
 
+  <section id="friendsTab" class="hidden">
+    <p id="frLogin" class="empty">Войди в аккаунт (👤), чтобы добавить друзей</p>
+    <div id="frBox" class="hidden">
+      <input type="text" id="frName" class="full" placeholder="Твоё имя">
+      <button id="frSave" class="soft-btn" style="margin-top:0">Сохранить имя</button>
+      <p class="muted">Твой код друга:</p>
+      <div class="row"><input type="text" id="frCode" readonly><button id="frCopy" class="soft-btn">📋</button></div>
+      <div class="row"><input type="text" id="frAdd" placeholder="Код друга"><button id="frAddBtn" class="main-btn small">➕</button></div>
+      <p id="frMsg" class="muted"></p>
+      <div id="friendList"></div>
+    </div>
+  </section>
+
   <section id="gameTab" class="hidden">
     <div class="row center"><span id="gameInfo" class="streak">🎯 Ходы: 0</span><span id="gameBest" class="streak">🏆 Рекорд: —</span></div>
     <div id="board" class="board"></div>
@@ -334,6 +356,7 @@ function applyTheme() {
 $("themeBtn").onclick = () => {
   localStorage.setItem("theme", localStorage.getItem("theme") === "dark" ? "light" : "dark");
   applyTheme();
+  if (window.cloudSave) window.cloudSave();
 };
 
 // ===== Серия и конфетти =====
@@ -361,11 +384,11 @@ function confetti() {
 }
 
 // ===== Вкладки =====
-const TABS = ["day", "week", "classes", "exams", "timer", "pet", "game", "stats"];
+const TABS = ["day", "week", "classes", "exams", "timer", "pet", "friends", "game", "stats"];
 function showTab(name) {
   TABS.forEach((t) => $(t + "Tab").classList.toggle("hidden", t !== name));
   document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
-  ({ day: renderDay, week: renderWeek, classes: renderClasses, exams: renderExams, timer: showTimer, pet: renderPet, game: initGame, stats: renderStats })[name]();
+  ({ day: renderDay, week: renderWeek, classes: renderClasses, exams: renderExams, timer: showTimer, pet: renderPet, friends: renderFriends, game: initGame, stats: renderStats })[name]();
 }
 document.querySelectorAll(".tab").forEach((b) => { b.onclick = () => showTab(b.dataset.tab); });
 
@@ -681,7 +704,7 @@ async function beep() {
   synth(key === "file" ? "m1" : key);
 }
 $("soundSel").value = localStorage.getItem("sound") || "m1";
-$("soundSel").onchange = () => localStorage.setItem("sound", $("soundSel").value);
+$("soundSel").onchange = () => { localStorage.setItem("sound", $("soundSel").value); if (window.cloudSave) window.cloudSave(); };
 $("soundPrev").onclick = () => { unlockAudio(); beep(); };
 $("soundFile").onchange = async () => {
   const f = $("soundFile").files[0];
@@ -718,6 +741,7 @@ function applySettings() {
   $("workMin").value = w;
   $("restMin").value = r;
   localStorage.setItem("timerSettings", JSON.stringify(settings));
+  if (window.cloudSave) window.cloudSave();
   if (!timerId) left = settings[mode] * 60;
   showTimer();
 }
@@ -796,7 +820,7 @@ const BG = {
 };
 let pet = { color: COLORS[0], head: "grad", face: "", neck: "", bg: "" };
 try { Object.assign(pet, JSON.parse(localStorage.getItem("pet")) || {}); } catch (e) {}
-const savePet = () => localStorage.setItem("pet", JSON.stringify(pet));
+const savePet = () => { localStorage.setItem("pet", JSON.stringify(pet)); if (window.cloudSave) window.cloudSave(); };
 
 // лучший результат серии за всё время (хранится, чтобы одежда не пропадала)
 function bestStreak() {
@@ -807,7 +831,7 @@ function bestStreak() {
   localStorage.setItem("petBest", best);
   return best;
 }
-function petSVG(mood) {
+function petSVG(mood, P) {
   const d = "#2b2b3a";
   const eyes = mood === "happy"
     ? `<path d="M70 100 Q80 88 90 100 M110 100 Q120 88 130 100" stroke="${d}" stroke-width="5" fill="none" stroke-linecap="round"/>`
@@ -820,21 +844,21 @@ function petSVG(mood) {
     ? `<path d="M92 124 Q100 118 108 124" stroke="${d}" stroke-width="4" fill="none" stroke-linecap="round"/>`
     : `<path d="M90 128 Q100 118 110 128" stroke="${d}" stroke-width="4" fill="none" stroke-linecap="round"/><text x="140" y="56" font-size="22" fill="#868e96">z</text><text x="152" y="42" font-size="16" fill="#868e96">z</text>`;
   return `<svg viewBox="0 0 200 205" xmlns="http://www.w3.org/2000/svg">
-    ${BG[pet.bg] || ""}
-    <ellipse cx="100" cy="168" rx="50" ry="34" fill="${pet.color}"/>
+    ${BG[P.bg] || ""}
+    <ellipse cx="100" cy="168" rx="50" ry="34" fill="${P.color}"/>
     <ellipse cx="100" cy="174" rx="28" ry="22" fill="#fff" fill-opacity=".5"/>
-    <path d="M46 78 L52 30 L88 54 Z M154 78 L148 30 L112 54 Z" fill="${pet.color}"/>
+    <path d="M46 78 L52 30 L88 54 Z M154 78 L148 30 L112 54 Z" fill="${P.color}"/>
     <path d="M56 66 L58 42 L76 54 Z M144 66 L142 42 L124 54 Z" fill="#ffc9c9"/>
-    <circle cx="100" cy="100" r="62" fill="${pet.color}"/>
+    <circle cx="100" cy="100" r="62" fill="${P.color}"/>
     <circle cx="66" cy="114" r="8" fill="#ff8787" fill-opacity=".55"/><circle cx="134" cy="114" r="8" fill="#ff8787" fill-opacity=".55"/>
     ${eyes}<ellipse cx="100" cy="110" rx="5" ry="3.5" fill="#e64980"/>${mouth}
-    ${FACE[pet.face] || ""}${NECK[pet.neck] || ""}${HEAD[pet.head] || ""}
+    ${FACE[P.face] || ""}${NECK[P.neck] || ""}${HEAD[P.head] || ""}
   </svg>`;
 }
 function renderPet() {
   const best = bestStreak(), st = getStreak();
   const mood = dayActive(todayISO) ? "happy" : st > 0 ? "worried" : "sad";
-  $("petBox").innerHTML = petSVG(mood);
+  $("petBox").innerHTML = petSVG(mood, pet);
   $("petMsg").textContent = {
     happy: "Ура! Серия идёт, так держать! 🎉",
     worried: "Выполни хотя бы одну задачу сегодня, чтобы не потерять серию! 🔥",
@@ -1000,14 +1024,34 @@ function renderSide() {
 }
 
 // ===== Связь с облаком (аккаунт) =====
+const PREF_KEYS = ["theme", "color", "lang", "timerSettings", "sound", "petBest", "memBest", "pet", "profileName"];
 window.planner = {
-  get: () => ({ tasks, exams, classes }),
+  get: () => {
+    const prefs = {};
+    PREF_KEYS.forEach((k) => { const v = localStorage.getItem(k); if (v !== null) prefs[k] = v; });
+    return { tasks, exams, classes, prefs };
+  },
   set: (d) => {
     tasks = d.tasks || []; exams = d.exams || []; classes = d.classes || [];
     saveLocal();
+    if (d.prefs) {
+      PREF_KEYS.forEach((k) => { if (d.prefs[k] !== undefined) localStorage.setItem(k, d.prefs[k]); });
+      try { pet = Object.assign({ color: COLORS[0], head: "grad", face: "", neck: "", bg: "" }, JSON.parse(localStorage.getItem("pet") || "{}")); } catch (e) {}
+      applyTheme(); applyColor();
+      const l = localStorage.getItem("lang");
+      if (l && l !== LANG) setLang(l);
+    }
     showTab(document.querySelector(".tab.active").dataset.tab);
+    if (window.showHello) window.showHello();
   }
 };
+window.APP = {
+  el: el, petSVG: petSVG, todayISO: todayISO, addDays: addDays,
+  info: () => ({ streak: getStreak(), best: bestStreak(), active: dayActive(todayISO), day: todayISO, pet: pet })
+};
+function renderFriends() {
+  if (window.loadFriends) window.loadFriends(); else $("frLogin").classList.remove("hidden");
+}
 
 // ===== Язык и цвет =====
 const D = [
@@ -1055,6 +1099,12 @@ const D = [
 ["Эта почта уже зарегистрирована","Бұл пошта тіркелген","This email is already registered"],
 ["Пароль слишком короткий (минимум 6 символов)","Құпиясөз тым қысқа (кемінде 6 таңба)","Password too short (min. 6 characters)"],
 ["Неправильная почта","Пошта дұрыс емес","Invalid email"],["Ошибка сохранения","Сақтау қатесі","Save error"],
+["👥 Друзья","👥 Достар","👥 Friends"],["Войди в аккаунт (👤), чтобы добавить друзей","Дос қосу үшін аккаунтқа кір (👤)","Log in (👤) to add friends"],
+["Твоё имя","Атың","Your name"],["Сохранить имя","Атын сақтау","Save name"],["Твой код друга:","Сенің дос кодың:","Your friend code:"],["Код друга","Дос коды","Friend code"],
+["Друзей пока нет. Отправь другу свой код! 👋","Әзірге дос жоқ. Досыңа кодыңды жібер! 👋","No friends yet. Send your code to a friend! 👋"],
+["Друг не найден","Дос табылмады","Friend not found"],["Это твой код","Бұл сенің кодың","This is your own code"],["Имя сохранено","Аты сақталды","Name saved"],["Код скопирован","Код көшірілді","Code copied"],
+["🔵 Войти через Google","🔵 Google арқылы кіру","🔵 Sign in with Google"],["Забыли пароль?","Құпиясөзді ұмыттың ба?","Forgot password?"],
+["Введи почту выше","Жоғарыға поштаңды жаз","Enter your email above"],["Письмо для сброса пароля отправлено","Құпиясөзді қалпына келтіру хаты жіберілді","Password reset email sent"],
 ["🐾 Питомец","🐾 Жануар","🐾 Pet"],["Рекорд серии","Қатар рекорды","Best streak"],["Цвет","Түсі","Color"],
 ["Головной убор","Бас киім","Headwear"],["Фон","Фон","Background"],["Очки","Көзілдірік","Glasses"],["На шею","Мойынға","Neck"],
 ["Новая одежда открывается за рекорд серии дней","Жаңа киім күн қатары рекордына қарай ашылады","New outfits unlock with your best streak"],
@@ -1075,6 +1125,7 @@ const PAT = [
   [/^🎉 Победа! Ходов: (\d+)$/, "🎉 Жеңіс! Жүріс: $1", "🎉 You win! Moves: $1"],
   [/^через (\d+) мин\.$/, "$1 мин кейін", "in $1 min"],
   [/^через (\d+) ч\.$/, "$1 сағаттан кейін", "in $1 h"],
+  [/^Привет, (.+)! 👋$/, "Сәлем, $1! 👋", "Hi, $1! 👋"],
   [/^🔒 (\d+) дн\.$/, "🔒 $1 күн", "🔒 $1 days"]
 ];
 let LANG = "ru";
@@ -1107,7 +1158,7 @@ function setLang(l) {
   showTab(document.querySelector(".tab.active").dataset.tab);
   walk(document.body);
 }
-$("langSel").onchange = () => setLang($("langSel").value);
+$("langSel").onchange = () => { setLang($("langSel").value); if (window.cloudSave) window.cloudSave(); };
 new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach(walk))).observe(document.body, { childList: true, subtree: true });
 
 function applyColor() {
@@ -1116,7 +1167,7 @@ function applyColor() {
   if (c) document.body.classList.add(c);
   $("colorSel").value = c;
 }
-$("colorSel").onchange = () => { localStorage.setItem("color", $("colorSel").value); applyColor(); };
+$("colorSel").onchange = () => { localStorage.setItem("color", $("colorSel").value); applyColor(); if (window.cloudSave) window.cloudSave(); };
 
 // ===== Запуск =====
 applyTheme();
@@ -1128,10 +1179,9 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-// ВСТАВЬ СЮДА СВОЙ firebaseConfig из консоли Firebase (замени весь этот блок)
 const firebaseConfig = {
   apiKey: "AIzaSyDSXb-3FfRSmHTS7_VvogmuDigj0yBqOSo",
   authDomain: "study-planner-476e2.firebaseapp.com",
@@ -1143,71 +1193,148 @@ const firebaseConfig = {
 
 const g = (id) => document.getElementById(id);
 const msg = (t) => { g("accMsg").textContent = t; };
+const frMsg = (t) => { g("frMsg").textContent = t; };
 g("accBtn").onclick = () => g("accBox").classList.toggle("hidden");
 
-if (firebaseConfig.apiKey.startsWith("PASTE")) {
-  msg("Аккаунт ещё не настроен");
-  g("accForm").classList.add("hidden");
-} else {
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  let user = null, unsub = null, timer = null, lastJson = "";
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let user = null, unsub = null, timer = null, lastJson = "";
 
-  const keyOf = (x) => JSON.stringify([x.text || x.name, x.date, x.start, x.day]);
-  const merge = (a, b) => { const m = new Map(); [...(a || []), ...(b || [])].forEach((x) => m.set(keyOf(x), x)); return [...m.values()]; };
+const keyOf = (x) => JSON.stringify([x.text || x.name, x.date, x.start, x.day]);
+const merge = (a, b) => { const m = new Map(); [...(a || []), ...(b || [])].forEach((x) => m.set(keyOf(x), x)); return [...m.values()]; };
+const myName = () => localStorage.getItem("profileName") || (user ? (user.displayName || user.email.split("@")[0]) : "");
 
-  async function push() {
-    if (!user) return;
-    lastJson = JSON.stringify(window.planner.get());
-    try { await setDoc(doc(db, "users", user.uid), { data: lastJson }); }
-    catch (e) { msg("Ошибка сохранения"); }
-  }
-  window.cloudSave = () => { if (!user) return; clearTimeout(timer); timer = setTimeout(push, 800); };
-
-  const errors = {
-    "auth/invalid-credential": "Неверная почта или пароль",
-    "auth/wrong-password": "Неверная почта или пароль",
-    "auth/user-not-found": "Неверная почта или пароль",
-    "auth/email-already-in-use": "Эта почта уже зарегистрирована",
-    "auth/weak-password": "Пароль слишком короткий (минимум 6 символов)",
-    "auth/invalid-email": "Неправильная почта"
-  };
-  async function run(fn) {
-    msg("");
-    try { await fn(auth, g("accEmail").value.trim(), g("accPass").value); g("accPass").value = ""; }
-    catch (e) { msg(errors[e.code] || "Ошибка: " + e.code); }
-  }
-  g("accLogin").onclick = () => run(signInWithEmailAndPassword);
-  g("accSignup").onclick = () => run(createUserWithEmailAndPassword);
-  g("accLogout").onclick = async () => { await signOut(auth); window.planner.set({}); };
-
-  onAuthStateChanged(auth, async (u) => {
-    user = u;
-    if (unsub) { unsub(); unsub = null; }
-    g("accForm").classList.toggle("hidden", !!u);
-    g("accIn").classList.toggle("hidden", !u);
-    g("accBtn").textContent = u ? "☁️" : "👤";
-    if (!u) return;
-    g("accWho").textContent = u.email;
-    const ref = doc(db, "users", u.uid);
-    let cloud = {};
-    try {
-      const snap = await getDoc(ref);
-      if (snap.exists()) cloud = JSON.parse(snap.data().data);
-    } catch (e) { msg("Ошибка сохранения"); return; }
-    const loc = window.planner.get();
-    window.planner.set({ tasks: merge(loc.tasks, cloud.tasks), exams: merge(loc.exams, cloud.exams), classes: merge(loc.classes, cloud.classes) });
-    await push();
-    unsub = onSnapshot(ref, (s) => {
-      if (s.metadata.hasPendingWrites || !s.exists()) return;
-      const j = s.data().data;
-      if (j === lastJson) return;
-      lastJson = j;
-      try { window.planner.set(JSON.parse(j)); } catch (e) {}
-    });
-  });
+// публичная карточка: имя, серия и вид питомца (видят вошедшие по коду)
+async function publish() {
+  if (!user) return;
+  const i = window.APP.info();
+  await setDoc(doc(db, "profiles", user.uid), { name: myName(), streak: i.streak, best: i.best, active: i.active, day: i.day, pet: JSON.stringify(i.pet) }, { merge: true });
 }
+async function push() {
+  if (!user) return;
+  lastJson = JSON.stringify(window.planner.get());
+  try { await setDoc(doc(db, "users", user.uid), { data: lastJson }, { merge: true }); await publish(); }
+  catch (e) { msg("Ошибка сохранения"); }
+}
+window.cloudSave = () => { if (!user) return; clearTimeout(timer); timer = setTimeout(push, 800); };
+window.showHello = () => { g("hello").textContent = user && myName() ? "Привет, " + myName() + "! 👋" : ""; };
+
+const errors = {
+  "auth/invalid-credential": "Неверная почта или пароль",
+  "auth/wrong-password": "Неверная почта или пароль",
+  "auth/user-not-found": "Неверная почта или пароль",
+  "auth/email-already-in-use": "Эта почта уже зарегистрирована",
+  "auth/weak-password": "Пароль слишком короткий (минимум 6 символов)",
+  "auth/invalid-email": "Неправильная почта"
+};
+async function run(fn) {
+  msg("");
+  try { await fn(); g("accPass").value = ""; }
+  catch (e) { msg(errors[e.code] || "Ошибка: " + e.code); }
+}
+g("accLogin").onclick = () => run(() => signInWithEmailAndPassword(auth, g("accEmail").value.trim(), g("accPass").value));
+g("accSignup").onclick = () => run(() => createUserWithEmailAndPassword(auth, g("accEmail").value.trim(), g("accPass").value));
+g("accGoogle").onclick = () => run(() => signInWithPopup(auth, new GoogleAuthProvider()));
+g("accReset").onclick = () => {
+  const em = g("accEmail").value.trim();
+  if (!em) { msg("Введи почту выше"); return; }
+  run(async () => { await sendPasswordResetEmail(auth, em); msg("Письмо для сброса пароля отправлено"); });
+};
+g("accLogout").onclick = async () => { await signOut(auth); window.planner.set({}); window.showHello(); if (window.loadFriends) window.loadFriends(); };
+
+// ---- друзья ----
+function friendCard(p, id, eff) {
+  const A = window.APP;
+  const mood = p.day === A.todayISO && p.active ? "happy" : eff > 0 ? "worried" : "sad";
+  let look = {};
+  try { look = JSON.parse(p.pet); } catch (e) {}
+  const c = A.el("div", "fr-card"), pw = A.el("div", "fr-pet");
+  pw.innerHTML = A.petSVG(mood, Object.assign({ color: "#ffa94d", head: "grad", face: "", neck: "", bg: "" }, look));
+  const info = A.el("div", "fr-info");
+  info.append(A.el("div", "fr-name", p.name || "?"), A.el("div", "muted", "🔥 " + eff + " · 🏆 " + (p.best || 0)));
+  const del = A.el("button", "small-btn del", "✖");
+  del.onclick = async () => { await setDoc(doc(db, "users", user.uid), { friends: arrayRemove(id) }, { merge: true }); window.loadFriends(); };
+  c.append(pw, info, del);
+  return c;
+}
+window.loadFriends = async () => {
+  g("frLogin").classList.toggle("hidden", !!user);
+  g("frBox").classList.toggle("hidden", !user);
+  if (!user) return;
+  g("frName").value = myName();
+  g("frCode").value = user.uid;
+  const list = g("friendList");
+  list.innerHTML = "";
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    const ids = (snap.exists() && snap.data().friends) || [];
+    const A = window.APP, rows = [];
+    for (const id of ids) {
+      const ps = await getDoc(doc(db, "profiles", id));
+      if (!ps.exists()) continue;
+      const p = ps.data();
+      const eff = p.day === A.todayISO || p.day === A.addDays(A.todayISO, -1) ? p.streak : 0;
+      rows.push([eff, p, id]);
+    }
+    rows.sort((a, b) => b[0] - a[0]).forEach((r) => list.appendChild(friendCard(r[1], r[2], r[0])));
+    if (!rows.length) list.appendChild(A.el("p", "empty", "Друзей пока нет. Отправь другу свой код! 👋"));
+  } catch (e) { frMsg("Ошибка сохранения"); }
+};
+g("frSave").onclick = () => {
+  const n = g("frName").value.trim();
+  if (!n) return;
+  localStorage.setItem("profileName", n);
+  window.cloudSave();
+  window.showHello();
+  frMsg("Имя сохранено");
+};
+g("frCopy").onclick = async () => { try { await navigator.clipboard.writeText(user.uid); frMsg("Код скопирован"); } catch (e) { g("frCode").select(); } };
+g("frAddBtn").onclick = async () => {
+  const code = g("frAdd").value.trim();
+  frMsg("");
+  if (!code) return;
+  if (code === user.uid) { frMsg("Это твой код"); return; }
+  try {
+    const ps = await getDoc(doc(db, "profiles", code));
+    if (!ps.exists()) { frMsg("Друг не найден"); return; }
+    await setDoc(doc(db, "users", user.uid), { friends: arrayUnion(code) }, { merge: true });
+    g("frAdd").value = "";
+    window.loadFriends();
+  } catch (e) { frMsg("Друг не найден"); }
+};
+
+onAuthStateChanged(auth, async (u) => {
+  user = u;
+  if (unsub) { unsub(); unsub = null; }
+  g("accForm").classList.toggle("hidden", !!u);
+  g("accIn").classList.toggle("hidden", !u);
+  g("accBtn").textContent = u ? "☁️" : "👤";
+  if (!u) return;
+  g("accWho").textContent = u.email;
+  const ref = doc(db, "users", u.uid);
+  let cloud = {};
+  try {
+    const snap = await getDoc(ref);
+    if (snap.exists() && snap.data().data) cloud = JSON.parse(snap.data().data);
+  } catch (e) { msg("Ошибка сохранения"); return; }
+  const loc = window.planner.get();
+  window.planner.set({
+    tasks: merge(loc.tasks, cloud.tasks), exams: merge(loc.exams, cloud.exams), classes: merge(loc.classes, cloud.classes),
+    prefs: Object.assign({}, loc.prefs, cloud.prefs)
+  });
+  if (!localStorage.getItem("profileName")) localStorage.setItem("profileName", myName());
+  window.showHello();
+  await push();
+  if (!g("friendsTab").classList.contains("hidden")) window.loadFriends();
+  unsub = onSnapshot(ref, (s) => {
+    if (s.metadata.hasPendingWrites || !s.exists() || !s.data().data) return;
+    const j = s.data().data;
+    if (j === lastJson) return;
+    lastJson = j;
+    try { window.planner.set(JSON.parse(j)); } catch (e) {}
+  });
+});
 </script>
 </body>
 </html>
