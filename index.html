@@ -88,6 +88,18 @@ body.c-pink{--b1:#e64980;--b2:#be4bdb;--bg:linear-gradient(135deg,#e64980,#f783a
 body.c-orange{--b1:#fd7e14;--b2:#f76707;--bg:linear-gradient(135deg,#fd7e14,#fcc419,#ff8787)}
 body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c}body.c-orange:not(.dark){--accent:#d9480f}
 .top select{padding:8px;border-radius:20px;font-size:14px}
+.tt{display:grid;gap:5px;margin-top:18px}
+.tt-h{text-align:center;font-weight:bold;font-size:13px;padding:6px 0}
+.tt-t{font-size:11px;text-align:center;display:flex;flex-direction:column;justify-content:center;color:var(--muted)}
+.tt-t b{color:var(--text);font-size:12px}
+.tt-c{border-radius:10px;min-height:62px;padding:6px 4px;font-size:11px;color:#212529;cursor:pointer;overflow:hidden}
+.tt-c.empty{background:repeating-linear-gradient(135deg,var(--soft),var(--soft) 6px,var(--item) 6px,var(--item) 12px);cursor:default}
+.tt-n{font-weight:bold;font-size:12px;word-break:break-word}
+.tt-r{margin-top:4px;opacity:.75}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
+.card{aspect-ratio:1;font-size:30px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;cursor:pointer;padding:0}
+.card.open{background:var(--soft);color:var(--text)}
+.card.gone{opacity:.4;pointer-events:none}
 </style>
 </head>
 <body>
@@ -108,6 +120,7 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
     <button class="tab" data-tab="classes">🎓 Пары</button>
     <button class="tab" data-tab="exams">📝 Экзамены</button>
     <button class="tab" data-tab="timer">⏱ Таймер</button>
+    <button class="tab" data-tab="game">🎮 Игра</button>
     <button class="tab" data-tab="stats">📊 Статистика</button>
   </nav>
 
@@ -144,11 +157,12 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
 
   <section id="classesTab" class="hidden">
     <div>
-      <input type="text" id="clsName" class="full" placeholder="Предмет, например: Математика">
+      <div class="row"><input type="text" id="clsName" placeholder="Предмет, например: Математика"><input type="text" id="clsRoom" placeholder="Аудитория, например: F304" style="max-width:42%"></div>
       <select id="clsDay" class="full">
         <option value="0">Понедельник</option><option value="1">Вторник</option><option value="2">Среда</option>
         <option value="3">Четверг</option><option value="4">Пятница</option><option value="5">Суббота</option><option value="6">Воскресенье</option>
       </select>
+      <select id="clsSlot" class="full"><option value="">⏱ Выбрать время пары</option></select>
       <div class="row"><input type="time" id="clsStart"><span>—</span><input type="time" id="clsEnd"></div>
       <button id="addClass" class="main-btn">➕ Добавить пару</button>
     </div>
@@ -186,6 +200,12 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
     </div>
   </section>
 
+  <section id="gameTab" class="hidden">
+    <div class="row center"><span id="gameInfo" class="streak">🎯 Ходы: 0</span><span id="gameBest" class="streak">🏆 Рекорд: —</span></div>
+    <div id="board" class="board"></div>
+    <button id="gameNew" class="soft-btn">🔄 Новая игра</button>
+  </section>
+
   <section id="statsTab" class="hidden"><div id="statsBox" class="stats-grid"></div></section>
 </div>
 
@@ -217,12 +237,13 @@ const timeText = (s, e) => (e ? s + "–" + e : s);
 
 // ===== Данные =====
 function load(key) { try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; } }
-let tasks = load("tasks"), exams = load("exams"), classes = load("classes");
+let tasks = load("tasks"), exams = load("exams"), classes = load("classes"), gpa = load("gpa");
 tasks.forEach((t) => { if (!t.date) t.date = todayISO; if (!t.priority) t.priority = "mid"; });
 function save() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
   localStorage.setItem("exams", JSON.stringify(exams));
   localStorage.setItem("classes", JSON.stringify(classes));
+  localStorage.setItem("gpa", JSON.stringify(gpa));
 }
 const PR = { high: 0, mid: 1, low: 2 };
 function sortTasks(list) {
@@ -250,10 +271,11 @@ function dayComplete(iso) {
   const l = tasks.filter((t) => t.date === iso);
   return l.length > 0 && l.every((t) => t.done);
 }
+function dayActive(iso) { return tasks.some((t) => t.date === iso && t.done); }
 function getStreak() {
   let iso = todayISO, n = 0;
-  if (!dayComplete(iso)) iso = addDays(iso, -1);
-  while (dayComplete(iso)) { n++; iso = addDays(iso, -1); }
+  if (!dayActive(iso)) iso = addDays(iso, -1);
+  while (dayActive(iso)) { n++; iso = addDays(iso, -1); }
   return n;
 }
 function confetti() {
@@ -269,11 +291,11 @@ function confetti() {
 }
 
 // ===== Вкладки =====
-const TABS = ["day", "week", "classes", "exams", "timer", "stats"];
+const TABS = ["day", "week", "classes", "exams", "timer", "game", "stats"];
 function showTab(name) {
   TABS.forEach((t) => $(t + "Tab").classList.toggle("hidden", t !== name));
   document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
-  ({ day: renderDay, week: renderWeek, classes: renderClasses, exams: renderExams, timer: showTimer, stats: renderStats })[name]();
+  ({ day: renderDay, week: renderWeek, classes: renderClasses, exams: renderExams, timer: showTimer, game: initGame, stats: renderStats })[name]();
 }
 document.querySelectorAll(".tab").forEach((b) => { b.onclick = () => showTab(b.dataset.tab); });
 
@@ -297,7 +319,7 @@ function renderDay() {
   box.classList.toggle("hidden", dc.length === 0);
   if (dc.length) {
     box.appendChild(el("b", null, "🎓 Пары в этот день:"));
-    dc.forEach((c) => box.appendChild(el("div", null, timeText(c.start, c.end) + " " + c.name)));
+    dc.forEach((c) => box.appendChild(el("div", null, timeText(c.start, c.end) + " " + c.name + (c.room ? " (" + c.room + ")" : ""))));
   }
 
   const list = sortTasks(tasks.filter((t) => t.date === currentDate));
@@ -402,31 +424,70 @@ function renderWeek() {
 
 // ===== Пары =====
 const DAYS = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"];
+const SLOT0 = 8 * 60 + 30;
+const SHORT = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+const PAL = ["#e5dbff", "#dbe4ff", "#d3f9d8", "#f3d9fa", "#ffe8cc", "#c5f6fa", "#ffd8d8", "#fff3bf"];
+const mins = (t) => { const q = t.split(":").map(Number); return q[0] * 60 + q[1]; };
+const fmt = (m) => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+function colorOf(name) {
+  let h = 0;
+  for (const ch of name.toUpperCase()) h = (h * 31 + ch.charCodeAt(0)) % PAL.length;
+  return PAL[h];
+}
+for (let i = 0; i < 13; i++) {
+  const a = SLOT0 + i * 60;
+  const o = el("option", null, fmt(a) + "–" + fmt(a + 50));
+  o.value = fmt(a) + "|" + fmt(a + 50);
+  $("clsSlot").appendChild(o);
+}
+$("clsSlot").onchange = () => {
+  const v = $("clsSlot").value;
+  if (v) { $("clsStart").value = v.split("|")[0]; $("clsEnd").value = v.split("|")[1]; }
+};
+
 function renderClasses() {
   const box = $("classList");
   box.innerHTML = "";
-  DAYS.forEach((name, i) => {
-    const list = classes.filter((c) => c.day === i).sort((a, b) => a.start.localeCompare(b.start));
-    if (!list.length) return;
-    const card = el("div", "week-card");
-    card.appendChild(el("div", "week-head", name));
-    list.forEach((c) => {
-      const row = el("div", "class-row");
-      const del = el("button", "small-btn del", "🗑");
-      del.onclick = () => { classes = classes.filter((x) => x !== c); save(); renderClasses(); };
-      row.append(el("span", null, timeText(c.start, c.end) + " " + c.name), del);
-      card.appendChild(row);
-    });
-    box.appendChild(card);
-  });
-  if (!box.children.length) box.appendChild(el("p", "empty", "Расписание пустое. Добавь первую пару! 🎓"));
+  const hit = (c, i) => {
+    const a = SLOT0 + i * 60, b = a + 50, st = mins(c.start), e = c.end ? mins(c.end) : st + 1;
+    return st < b && e > a;
+  };
+  let lo = 99, hi = -99;
+  for (let i = -2; i <= 14; i++) if (classes.some((c) => hit(c, i))) { lo = Math.min(lo, i); hi = Math.max(hi, i); }
+  if (hi < lo) { box.appendChild(el("p", "empty", "Расписание пустое. Добавь первую пару! 🎓")); return; }
+
+  const nd = classes.some((c) => c.day === 6) ? 7 : 6;
+  const g = el("div", "tt");
+  g.style.gridTemplateColumns = "50px repeat(" + nd + ", 1fr)";
+  g.appendChild(el("div"));
+  for (let d = 0; d < nd; d++) g.appendChild(el("div", "tt-h", SHORT[d]));
+
+  for (let i = lo; i <= hi; i++) {
+    const a = SLOT0 + i * 60;
+    const lab = el("div", "tt-t");
+    lab.append(el("b", null, fmt(a)), el("span", null, fmt(a + 50)));
+    g.appendChild(lab);
+    for (let d = 0; d < nd; d++) {
+      const c = classes.find((x) => x.day === d && hit(x, i));
+      if (!c) { g.appendChild(el("div", "tt-c empty")); continue; }
+      const cell = el("div", "tt-c");
+      cell.style.background = colorOf(c.name);
+      cell.appendChild(el("div", "tt-n", c.name));
+      if (c.room) cell.appendChild(el("div", "tt-r", "🚪 " + c.room));
+      cell.onclick = () => {
+        if (confirm(tr("Удалить пару?") + " " + c.name)) { classes = classes.filter((x) => x !== c); save(); renderClasses(); }
+      };
+      g.appendChild(cell);
+    }
+  }
+  box.appendChild(g);
 }
 $("addClass").onclick = () => {
   const name = $("clsName").value.trim(), start = $("clsStart").value;
   if (!name || !start) { alert(tr("Укажи предмет и время начала")); return; }
-  classes.push({ name: name, day: Number($("clsDay").value), start: start, end: $("clsEnd").value });
+  classes.push({ name: name, room: $("clsRoom").value.trim(), day: Number($("clsDay").value), start: start, end: $("clsEnd").value });
   save();
-  $("clsName").value = ""; $("clsStart").value = ""; $("clsEnd").value = "";
+  $("clsName").value = ""; $("clsRoom").value = ""; $("clsSlot").value = ""; $("clsStart").value = ""; $("clsEnd").value = "";
   renderClasses();
 };
 
@@ -624,6 +685,55 @@ function renderStats() {
   });
 }
 
+// ===== Игра: найди пары =====
+const EM = ["🍎", "🚀", "🎧", "📚", "⚽", "🎮", "🌙", "🔥"];
+let gOpen = [], gMoves = 0, gLeft = 8, gLock = false;
+function showGameInfo() {
+  $("gameInfo").textContent = "🎯 Ходы: " + gMoves;
+  $("gameBest").textContent = "🏆 Рекорд: " + (localStorage.getItem("memBest") || "—");
+}
+function newGame() {
+  const deck = [...EM, ...EM].sort(() => Math.random() - 0.5);
+  gOpen = []; gMoves = 0; gLeft = 8; gLock = false;
+  $("board").innerHTML = "";
+  deck.forEach((e) => {
+    const b = el("button", "card", "❓");
+    b.onclick = () => flip(b, e);
+    $("board").appendChild(b);
+  });
+  showGameInfo();
+}
+function flip(b, e) {
+  if (gLock || b.classList.contains("open")) return;
+  b.classList.add("open");
+  b.textContent = e;
+  gOpen.push([b, e]);
+  if (gOpen.length < 2) return;
+  gMoves++;
+  showGameInfo();
+  const x = gOpen[0], y = gOpen[1];
+  gOpen = [];
+  if (x[1] === y[1]) {
+    x[0].classList.add("gone");
+    y[0].classList.add("gone");
+    if (--gLeft === 0) {
+      const best = Number(localStorage.getItem("memBest")) || 999;
+      if (gMoves < best) localStorage.setItem("memBest", gMoves);
+      $("gameInfo").textContent = "🎉 Победа! Ходов: " + gMoves;
+      $("gameBest").textContent = "🏆 Рекорд: " + localStorage.getItem("memBest");
+      confetti();
+    }
+  } else {
+    gLock = true;
+    setTimeout(() => {
+      [x, y].forEach((o) => { o[0].classList.remove("open"); o[0].textContent = "❓"; });
+      gLock = false;
+    }, 700);
+  }
+}
+function initGame() { if (!$("board").children.length) newGame(); else showGameInfo(); }
+$("gameNew").onclick = newGame;
+
 // ===== Язык и цвет =====
 const D = [
 ["📚 Мой планировщик","📚 Менің жоспарлаушым","📚 My Planner"],["📅 День","📅 Күн","📅 Day"],["🗓 Неделя","🗓 Апта","🗓 Week"],
@@ -650,7 +760,17 @@ const D = [
 ["Экзаменов пока нет 🙌","Әзірге емтихан жоқ 🙌","No exams yet 🙌"],["Прошёл","Өтті","Passed"],["Сегодня! 💪","Бүгін! 💪","Today! 💪"],
 ["Перенесено задач на следующий день: ","Келесі күнге көшірілген тапсырма: ","Tasks moved to next day: "],
 ["Укажи предмет и время начала","Пән мен басталу уақытын көрсет","Enter subject and start time"],
-["Укажи название и дату","Атауы мен күнін көрсет","Enter name and date"],["Исправь задачу:","Тапсырманы түзет:","Edit task:"]
+["Укажи название и дату","Атауы мен күнін көрсет","Enter name and date"],["Исправь задачу:","Тапсырманы түзет:","Edit task:"],
+["Название предмета","Пән атауы","Subject name"],["Кредиты","Кредит","Credits"],["➕ Добавить предмет","➕ Пән қосу","➕ Add subject"],
+["Оценок пока нет 📚","Әзірге баға жоқ 📚","No grades yet 📚"],["💾 Сохранить копию","💾 Көшірмені сақтау","💾 Save backup"],
+["📂 Загрузить копию","📂 Көшірмені жүктеу","📂 Load backup"],["🏅 Достижения","🏅 Жетістіктер","🏅 Achievements"],
+["🌱 Первая задача","🌱 Алғашқы тапсырма","🌱 First task"],["⭐ 10 задач","⭐ 10 тапсырма","⭐ 10 tasks"],["🏆 50 задач","🏆 50 тапсырма","🏆 50 tasks"],
+["🔥 3 дня подряд","🔥 3 күн қатарынан","🔥 3-day streak"],["🔥 7 дней подряд","🔥 7 күн қатарынан","🔥 7-day streak"],
+["🎓 GPA от 3.5","🎓 GPA 3.5+","🎓 GPA 3.5+"],["Копия загружена!","Көшірме жүктелді!","Backup loaded!"],["Файл не подходит","Файл жарамсыз","Invalid file"],
+["Укажи предмет и кредиты","Пән мен кредитті көрсет","Enter subject and credits"],
+["🎮 Игра","🎮 Ойын","🎮 Game"],["🔄 Новая игра","🔄 Жаңа ойын","🔄 New game"],["Удалить пару?","Сабақты өшіру керек пе?","Delete this class?"],
+["Аудитория, например: F304","Аудитория, мысалы: F304","Room, e.g. F304"],["⏱ Выбрать время пары","⏱ Сабақ уақытын таңда","⏱ Pick class time"],
+["Пн","Дс","Mo"],["Вт","Сс","Tu"],["Ср","Ср","We"],["Чт","Бс","Th"],["Пт","Жм","Fr"],["Сб","Сб","Sa"],["Вс","Жс","Su"]
 ];
 const DICT = {};
 D.forEach((r) => { DICT[r[0]] = [r[1], r[2]]; });
@@ -658,7 +778,11 @@ const PAT = [
   [/^Выполнено (\d+) из (\d+) \((\d+)%\)$/, "Орындалды $1/$2 ($3%)", "Done $1 of $2 ($3%)"],
   [/^🔥 (\d+) дн\. подряд$/, "🔥 қатарынан $1 күн", "🔥 $1 day streak"],
   [/^Осталось (\d+) дн\.$/, "Қалды $1 күн", "$1 days left"],
-  [/^Завершено помидоров: (\d+)$/, "Аяқталған помидор: $1", "Pomodoros done: $1"]
+  [/^Завершено помидоров: (\d+)$/, "Аяқталған помидор: $1", "Pomodoros done: $1"],
+  [/^(\d+) кр\.$/, "$1 кр.", "$1 cr."],
+  [/^🎯 Ходы: (\d+)$/, "🎯 Жүріс: $1", "🎯 Moves: $1"],
+  [/^🏆 Рекорд: (.+)$/, "🏆 Рекорд: $1", "🏆 Best: $1"],
+  [/^🎉 Победа! Ходов: (\d+)$/, "🎉 Жеңіс! Жүріс: $1", "🎉 You win! Moves: $1"]
 ];
 let LANG = "ru";
 function tr(s) {
