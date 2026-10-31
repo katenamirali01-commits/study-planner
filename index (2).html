@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Планировщик учёбы</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4c6ef5">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+<style>
+*{box-sizing:border-box}
+:root{--b1:#4c6ef5;--b2:#7950f2;--bg:linear-gradient(135deg,#4c6ef5,#9775fa,#f783ac);--card:#fff;--text:#212529;--muted:#868e96;--soft:#f1f3ff;--item:#f8f9ff;--line:#dee2e6;--accent:#3b5bdb}
+body.dark{--card:#1e2130;--text:#e9ecef;--muted:#9aa0b4;--soft:#2a2e45;--item:#262a3f;--line:#3a3f5c;--accent:#91a7ff}
+body{font-family:Arial,sans-serif;background:var(--bg);min-height:100vh;margin:0;padding:20px;color:var(--text)}
+body.dark{background:linear-gradient(135deg,#1a1b2e,#2b2250,#3d2250)}
+.app{max-width:600px;margin:20px auto;background:var(--card);border-radius:20px;padding:24px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+header{text-align:center;margin-bottom:16px}
+h1{color:var(--accent);margin:0 0 10px}
+.hidden{display:none!important}
+.muted,.empty{color:var(--muted);font-size:14px}
+.empty{text-align:center;margin-top:16px}
+.top{display:flex;justify-content:center;align-items:center;gap:10px}
+.streak{background:var(--soft);padding:8px 14px;border-radius:20px;font-weight:bold}
+.icon-btn{background:var(--soft);border:none;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+.tab{flex:1 1 30%;padding:10px 4px;background:var(--soft);color:var(--text);border:none;border-radius:10px;font-size:13px;cursor:pointer}
+.tab.active{background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff}
+input,select{padding:12px;border:2px solid var(--line);border-radius:10px;font-size:15px;background:var(--card);color:var(--text);font-family:inherit}
+input:focus,select:focus{outline:none;border-color:#4c6ef5}
+.full{width:100%;margin-bottom:10px}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.row input{flex:1;min-width:0}
+.row.center{justify-content:center}
+.check{display:block;margin-bottom:10px;cursor:pointer}
+input[type=checkbox]{margin-right:6px}
+.main-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer}
+.main-btn.small{width:auto;padding:12px 24px}
+.main-btn:hover{opacity:.9}
+.soft-btn{display:block;margin:16px auto 0;padding:10px 16px;background:var(--soft);color:var(--accent);border:none;border-radius:10px;cursor:pointer;font-size:14px}
+.row .soft-btn{margin:0}
+.day-nav{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.day-center{flex:1;text-align:center}
+.day-center input{width:auto}
+.day-label{margin:0 0 6px;font-size:20px;font-weight:bold;color:var(--accent);text-transform:capitalize}
+.nav-btn{width:44px;height:44px;background:var(--soft);color:var(--accent);border:none;border-radius:50%;font-size:16px;cursor:pointer}
+.today-btn{display:block;margin:10px auto 16px;background:none;border:none;color:#4c6ef5;cursor:pointer;font-size:14px;text-decoration:underline}
+.day-classes{background:var(--soft);border-radius:12px;padding:10px 14px;margin-bottom:16px;font-size:14px;line-height:1.6}
+.progress-box{background:var(--soft);border-radius:14px;padding:14px;margin-bottom:16px}
+#progressText{margin:0 0 8px;font-weight:bold;color:var(--accent)}
+.progress{background:var(--line);border-radius:10px;height:12px;overflow:hidden}
+.progress-bar{background:linear-gradient(90deg,#51cf66,#20c997);height:100%;width:0;transition:width .4s}
+.cheer{background:#d3f9d8;color:#2b8a3e;padding:12px;border-radius:12px;text-align:center;font-weight:bold;margin-bottom:16px}
+ul{list-style:none;padding:0;margin:20px 0 0}
+li{display:flex;align-items:center;justify-content:space-between;background:var(--item);border-left:5px solid #4c6ef5;border-radius:12px;padding:12px 14px;margin-bottom:10px}
+li.p-high{border-left-color:#fa5252}
+li.p-mid{border-left-color:#fab005}
+li.p-low{border-left-color:#40c057}
+li.completed{border-left-color:#868e96;opacity:.65}
+li.completed .task-label{text-decoration:line-through}
+.task-text{flex:1;cursor:pointer}
+.time-badge{display:inline-block;background:var(--b1);color:#fff;font-size:13px;padding:3px 8px;border-radius:8px;margin-right:8px}
+.btns{display:flex;gap:6px;margin-left:10px}
+.small-btn{background:var(--soft);border:none;border-radius:8px;padding:8px 10px;cursor:pointer}
+.small-btn.del{background:#fff0f0;color:#e03131}
+.week-card{background:var(--item);border-radius:14px;padding:14px;margin-bottom:12px;border:2px solid transparent}
+.week-card.clickable{cursor:pointer}
+.week-card.clickable:hover{border-color:#4c6ef5}
+.week-card.today{border-color:#7950f2}
+.week-head{display:flex;justify-content:space-between;font-weight:bold;color:var(--accent);margin-bottom:6px;text-transform:capitalize}
+.week-task{font-size:14px;margin:4px 0}
+.week-task.completed{text-decoration:line-through;color:var(--muted)}
+.class-row{display:flex;justify-content:space-between;align-items:center;margin:6px 0;font-size:14px}
+.timer-box{text-align:center}
+.timer-display{font-size:64px;font-weight:bold;color:var(--accent);margin:10px 0 20px}
+#timerMode{font-size:20px;margin:0}
+.timer-settings{display:flex;gap:12px;margin-top:20px}
+.timer-settings label{flex:1;font-size:14px;color:var(--muted)}
+.timer-settings input{width:100%;margin-top:6px;text-align:center;font-size:18px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat-card{background:var(--soft);border-radius:14px;padding:18px;text-align:center}
+.stat-number{font-size:32px;font-weight:bold;color:var(--accent);margin:0}
+.stat-name{font-size:14px;color:var(--muted);margin:6px 0 0}
+.confetti{position:fixed;top:-20px;width:10px;height:14px;z-index:999;animation:fall 2.5s linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+body.c-green{--b1:#12b886;--b2:#0ca678;--bg:linear-gradient(135deg,#12b886,#38d9a9,#74c0fc)}
+body.c-pink{--b1:#e64980;--b2:#be4bdb;--bg:linear-gradient(135deg,#e64980,#f783ac,#da77f2)}
+body.c-orange{--b1:#fd7e14;--b2:#f76707;--bg:linear-gradient(135deg,#fd7e14,#fcc419,#ff8787)}
+body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c}body.c-orange:not(.dark){--accent:#d9480f}
+.top select{padding:8px;border-radius:20px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>📚 Мой планировщик</h1>
+    <div class="top">
+      <span id="streak" class="streak">🔥 0</span>
+      <button id="themeBtn" class="icon-btn">🌙</button>
+      <select id="colorSel"><option value="">🔵</option><option value="c-green">🟢</option><option value="c-pink">🌸</option><option value="c-orange">🟠</option></select>
+      <select id="langSel"><option value="ru">RU</option><option value="kk">ҚАЗ</option><option value="en">EN</option></select>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="day">📅 День</button>
+    <button class="tab" data-tab="week">🗓 Неделя</button>
+    <button class="tab" data-tab="classes">🎓 Пары</button>
+    <button class="tab" data-tab="exams">📝 Экзамены</button>
+    <button class="tab" data-tab="timer">⏱ Таймер</button>
+    <button class="tab" data-tab="stats">📊 Статистика</button>
+  </nav>
+
+  <section id="dayTab">
+    <div class="day-nav">
+      <button id="prevDay" class="nav-btn">◀</button>
+      <div class="day-center"><p id="dayLabel" class="day-label"></p><input type="date" id="dateInput"></div>
+      <button id="nextDay" class="nav-btn">▶</button>
+    </div>
+    <button id="todayBtn" class="today-btn">Перейти к сегодня</button>
+    <div id="dayClasses" class="day-classes hidden"></div>
+    <div class="progress-box">
+      <p id="progressText">Нет задач</p>
+      <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
+    </div>
+    <div id="cheer" class="cheer hidden">🎉 Все задачи выполнены! Ты молодец!</div>
+    <div>
+      <input type="text" id="taskInput" class="full" placeholder="Напиши здесь...">
+      <select id="priority" class="full">
+        <option value="high">🔴 Важно</option>
+        <option value="mid" selected>🟡 Средне</option>
+        <option value="low">🟢 Не срочно</option>
+      </select>
+      <label class="check"><input type="checkbox" id="timeToggle"> ⏰ Указать время</label>
+      <div id="timeFields" class="row hidden"><input type="time" id="startInput"><span>—</span><input type="time" id="endInput"></div>
+      <button id="addButton" class="main-btn">➕ Добавить</button>
+    </div>
+    <ul id="taskList"></ul>
+    <p id="emptyText" class="empty">На этот день задач нет. Добавь первую! ✨</p>
+    <button id="carryBtn" class="soft-btn hidden">➡️ Перенести невыполненные на следующий день</button>
+  </section>
+
+  <section id="weekTab" class="hidden"><div id="weekList"></div></section>
+
+  <section id="classesTab" class="hidden">
+    <div>
+      <input type="text" id="clsName" class="full" placeholder="Предмет, например: Математика">
+      <select id="clsDay" class="full">
+        <option value="0">Понедельник</option><option value="1">Вторник</option><option value="2">Среда</option>
+        <option value="3">Четверг</option><option value="4">Пятница</option><option value="5">Суббота</option><option value="6">Воскресенье</option>
+      </select>
+      <div class="row"><input type="time" id="clsStart"><span>—</span><input type="time" id="clsEnd"></div>
+      <button id="addClass" class="main-btn">➕ Добавить пару</button>
+    </div>
+    <div id="classList"></div>
+  </section>
+
+  <section id="examsTab" class="hidden">
+    <div>
+      <input type="text" id="examName" class="full" placeholder="Название экзамена">
+      <input type="date" id="examDate" class="full">
+      <button id="addExam" class="main-btn">➕ Добавить экзамен</button>
+    </div>
+    <ul id="examList"></ul>
+  </section>
+
+  <section id="timerTab" class="hidden">
+    <div class="timer-box">
+      <p id="timerMode">📖 Учёба</p>
+      <p id="timerDisplay" class="timer-display">25:00</p>
+      <div class="row center">
+        <button id="timerStart" class="main-btn small">▶ Старт</button>
+        <button id="timerReset" class="soft-btn">↺ Сброс</button>
+      </div>
+      <div class="timer-settings"><label>🔔 Мелодия
+        <select id="soundSel" class="full"><option value="m1">🎹 Классика</option><option value="m2">🥁 Бит</option><option value="m3">🔔 Колокольчик</option><option value="file">🎵 Моя музыка</option></select></label></div>
+      <div class="row center">
+        <button id="soundPrev" class="soft-btn">▶ Послушать</button>
+        <label class="soft-btn" style="cursor:pointer">🎵 Своя музыка<input type="file" id="soundFile" accept="audio/*" hidden></label>
+      </div>
+      <div class="timer-settings">
+        <label>📖 Учёба (мин)<input type="number" id="workMin" min="1" max="180"></label>
+        <label>☕ Отдых (мин)<input type="number" id="restMin" min="1" max="60"></label>
+      </div>
+      <p id="timerCount" class="empty"></p>
+    </div>
+  </section>
+
+  <section id="statsTab" class="hidden"><div id="statsBox" class="stats-grid"></div></section>
+</div>
+
+<script>
+let LOC = "ru-RU";
+const $ = (id) => document.getElementById(id);
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function toISO(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function fromISO(s) { const p = s.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+function addDays(iso, n) { const d = fromISO(iso); d.setDate(d.getDate() + n); return toISO(d); }
+
+const todayISO = toISO(new Date());
+let currentDate = todayISO;
+
+function dayName(iso) {
+  if (iso === todayISO) return "Сегодня";
+  if (iso === addDays(todayISO, 1)) return "Завтра";
+  if (iso === addDays(todayISO, -1)) return "Вчера";
+  return fromISO(iso).toLocaleDateString(LOC, { weekday: "long", day: "numeric", month: "long" });
+}
+const timeText = (s, e) => (e ? s + "–" + e : s);
+
+// ===== Данные =====
+function load(key) { try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; } }
+let tasks = load("tasks"), exams = load("exams"), classes = load("classes");
+tasks.forEach((t) => { if (!t.date) t.date = todayISO; if (!t.priority) t.priority = "mid"; });
+function save() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  localStorage.setItem("exams", JSON.stringify(exams));
+  localStorage.setItem("classes", JSON.stringify(classes));
+}
+const PR = { high: 0, mid: 1, low: 2 };
+function sortTasks(list) {
+  return [...list].sort((a, b) => {
+    if (a.start && b.start) return a.start.localeCompare(b.start);
+    if (a.start) return -1;
+    if (b.start) return 1;
+    return PR[a.priority] - PR[b.priority];
+  });
+}
+
+// ===== Тема =====
+function applyTheme() {
+  const dark = localStorage.getItem("theme") === "dark";
+  document.body.classList.toggle("dark", dark);
+  $("themeBtn").textContent = dark ? "☀️" : "🌙";
+}
+$("themeBtn").onclick = () => {
+  localStorage.setItem("theme", localStorage.getItem("theme") === "dark" ? "light" : "dark");
+  applyTheme();
+};
+
+// ===== Серия и конфетти =====
+function dayComplete(iso) {
+  const l = tasks.filter((t) => t.date === iso);
+  return l.length > 0 && l.every((t) => t.done);
+}
+function getStreak() {
+  let iso = todayISO, n = 0;
+  if (!dayComplete(iso)) iso = addDays(iso, -1);
+  while (dayComplete(iso)) { n++; iso = addDays(iso, -1); }
+  return n;
+}
+function confetti() {
+  const colors = ["#ff6b6b", "#ffd43b", "#51cf66", "#4dabf7", "#da77f2"];
+  for (let i = 0; i < 50; i++) {
+    const c = el("div", "confetti");
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.background = colors[i % 5];
+    c.style.animationDelay = Math.random() * 0.8 + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 3500);
+  }
+}
+
+// ===== Вкладки =====
+const TABS = ["day", "week", "classes", "exams", "timer", "stats"];
+function showTab(name) {
+  TABS.forEach((t) => $(t + "Tab").classList.toggle("hidden", t !== name));
+  document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+  ({ day: renderDay, week: renderWeek, classes: renderClasses, exams: renderExams, timer: showTimer, stats: renderStats })[name]();
+}
+document.querySelectorAll(".tab").forEach((b) => { b.onclick = () => showTab(b.dataset.tab); });
+
+// ===== День =====
+function setDate(iso) { currentDate = iso; renderDay(); }
+$("prevDay").onclick = () => setDate(addDays(currentDate, -1));
+$("nextDay").onclick = () => setDate(addDays(currentDate, 1));
+$("todayBtn").onclick = () => setDate(todayISO);
+$("dateInput").onchange = () => { if ($("dateInput").value) setDate($("dateInput").value); };
+$("timeToggle").onchange = () => $("timeFields").classList.toggle("hidden", !$("timeToggle").checked);
+
+function renderDay() {
+  $("dayLabel").textContent = dayName(currentDate);
+  $("dateInput").value = currentDate;
+  $("todayBtn").classList.toggle("hidden", currentDate === todayISO);
+
+  const wd = (fromISO(currentDate).getDay() + 6) % 7;
+  const dc = classes.filter((c) => c.day === wd).sort((a, b) => a.start.localeCompare(b.start));
+  const box = $("dayClasses");
+  box.innerHTML = "";
+  box.classList.toggle("hidden", dc.length === 0);
+  if (dc.length) {
+    box.appendChild(el("b", null, "🎓 Пары в этот день:"));
+    dc.forEach((c) => box.appendChild(el("div", null, timeText(c.start, c.end) + " " + c.name)));
+  }
+
+  const list = sortTasks(tasks.filter((t) => t.date === currentDate));
+  $("taskList").innerHTML = "";
+  list.forEach((task) => {
+    const li = el("li", "p-" + task.priority);
+    if (task.done) li.classList.add("completed");
+    const textBox = el("div", "task-text");
+    if (task.start) textBox.appendChild(el("span", "time-badge", timeText(task.start, task.end)));
+    textBox.appendChild(el("span", "task-label", task.text));
+    textBox.onclick = () => {
+      task.done = !task.done;
+      save();
+      renderDay();
+      if (task.done && dayComplete(currentDate)) confetti();
+    };
+    const edit = el("button", "small-btn", "✏️");
+    edit.onclick = () => {
+      const t = prompt(tr("Исправь задачу:"), task.text);
+      if (t && t.trim()) { task.text = t.trim(); save(); renderDay(); }
+    };
+    const del = el("button", "small-btn del", "🗑");
+    del.onclick = () => { tasks = tasks.filter((t) => t !== task); save(); renderDay(); };
+    const btns = el("div", "btns");
+    btns.append(edit, del);
+    li.append(textBox, btns);
+    $("taskList").appendChild(li);
+  });
+
+  const total = list.length, done = list.filter((t) => t.done).length;
+  if (total === 0) {
+    $("progressText").textContent = "Нет задач";
+    $("progressBar").style.width = "0%";
+  } else {
+    const p = Math.round((done / total) * 100);
+    $("progressText").textContent = "Выполнено " + done + " из " + total + " (" + p + "%)";
+    $("progressBar").style.width = p + "%";
+  }
+  $("cheer").classList.toggle("hidden", !(total > 0 && done === total));
+  $("emptyText").classList.toggle("hidden", total > 0);
+  $("carryBtn").classList.toggle("hidden", total === done);
+  $("streak").textContent = "🔥 " + getStreak() + " дн. подряд";
+}
+
+function addTask() {
+  const text = $("taskInput").value.trim();
+  if (!text) return;
+  const useTime = $("timeToggle").checked;
+  tasks.push({
+    text: text, date: currentDate,
+    start: useTime ? $("startInput").value : "",
+    end: useTime ? $("endInput").value : "",
+    priority: $("priority").value, done: false
+  });
+  save();
+  $("taskInput").value = "";
+  $("startInput").value = "";
+  $("endInput").value = "";
+  $("priority").value = "mid";
+  $("timeToggle").checked = false;
+  $("timeFields").classList.add("hidden");
+  renderDay();
+}
+$("addButton").onclick = addTask;
+$("taskInput").onkeydown = (e) => { if (e.key === "Enter") addTask(); };
+
+$("carryBtn").onclick = () => {
+  const next = addDays(currentDate, 1);
+  let n = 0;
+  tasks.forEach((t) => { if (t.date === currentDate && !t.done) { t.date = next; n++; } });
+  save();
+  renderDay();
+  alert(tr("Перенесено задач на следующий день: ") + n);
+};
+
+// ===== Неделя =====
+function renderWeek() {
+  $("weekList").innerHTML = "";
+  const monday = addDays(currentDate, -((fromISO(currentDate).getDay() + 6) % 7));
+  for (let i = 0; i < 7; i++) {
+    const iso = addDays(monday, i);
+    const list = sortTasks(tasks.filter((t) => t.date === iso));
+    const done = list.filter((t) => t.done).length;
+    const card = el("div", "week-card clickable");
+    if (iso === todayISO) card.classList.add("today");
+    const head = el("div", "week-head");
+    head.append(el("span", null, dayName(iso)), el("span", "muted", list.length ? done + "/" + list.length : ""));
+    card.appendChild(head);
+    if (!list.length) {
+      card.appendChild(el("p", "muted", "Свободный день"));
+    } else {
+      list.forEach((t) => {
+        const row = el("div", "week-task", (t.start ? t.start + " " : "") + t.text);
+        if (t.done) row.classList.add("completed");
+        card.appendChild(row);
+      });
+    }
+    card.onclick = () => { currentDate = iso; showTab("day"); };
+    $("weekList").appendChild(card);
+  }
+}
+
+// ===== Пары =====
+const DAYS = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"];
+function renderClasses() {
+  const box = $("classList");
+  box.innerHTML = "";
+  DAYS.forEach((name, i) => {
+    const list = classes.filter((c) => c.day === i).sort((a, b) => a.start.localeCompare(b.start));
+    if (!list.length) return;
+    const card = el("div", "week-card");
+    card.appendChild(el("div", "week-head", name));
+    list.forEach((c) => {
+      const row = el("div", "class-row");
+      const del = el("button", "small-btn del", "🗑");
+      del.onclick = () => { classes = classes.filter((x) => x !== c); save(); renderClasses(); };
+      row.append(el("span", null, timeText(c.start, c.end) + " " + c.name), del);
+      card.appendChild(row);
+    });
+    box.appendChild(card);
+  });
+  if (!box.children.length) box.appendChild(el("p", "empty", "Расписание пустое. Добавь первую пару! 🎓"));
+}
+$("addClass").onclick = () => {
+  const name = $("clsName").value.trim(), start = $("clsStart").value;
+  if (!name || !start) { alert(tr("Укажи предмет и время начала")); return; }
+  classes.push({ name: name, day: Number($("clsDay").value), start: start, end: $("clsEnd").value });
+  save();
+  $("clsName").value = ""; $("clsStart").value = ""; $("clsEnd").value = "";
+  renderClasses();
+};
+
+// ===== Экзамены =====
+function renderExams() {
+  const ul = $("examList");
+  ul.innerHTML = "";
+  [...exams].sort((a, b) => a.date.localeCompare(b.date)).forEach((ex) => {
+    const diff = Math.round((fromISO(ex.date) - fromISO(todayISO)) / 86400000);
+    let txt = "Прошёл";
+    if (diff > 0) txt = "Осталось " + diff + " дн.";
+    if (diff === 0) txt = "Сегодня! 💪";
+    const li = el("li", diff < 0 ? "completed" : diff <= 3 ? "p-high" : "p-low");
+    const info = el("div", "task-text");
+    info.appendChild(el("b", null, ex.name));
+    info.appendChild(el("div", "muted", fromISO(ex.date).toLocaleDateString(LOC, { day: "numeric", month: "long" }) + " · " + txt));
+    const del = el("button", "small-btn del", "🗑");
+    del.onclick = () => { exams = exams.filter((x) => x !== ex); save(); renderExams(); };
+    li.append(info, del);
+    ul.appendChild(li);
+  });
+  if (!exams.length) ul.appendChild(el("p", "empty", "Экзаменов пока нет 🙌"));
+}
+$("addExam").onclick = () => {
+  const name = $("examName").value.trim(), date = $("examDate").value;
+  if (!name || !date) { alert(tr("Укажи название и дату")); return; }
+  exams.push({ name: name, date: date });
+  save();
+  $("examName").value = ""; $("examDate").value = "";
+  renderExams();
+};
+
+// ===== Таймер =====
+let settings = { work: 25, rest: 5 };
+try {
+  const s = JSON.parse(localStorage.getItem("timerSettings"));
+  if (s && s.work >= 1 && s.rest >= 1) settings = s;
+} catch (e) {}
+const LABELS = { work: "📖 Учёба", rest: "☕ Отдых" };
+let mode = "work", left = settings.work * 60, timerId = null, pomodoros = 0;
+$("workMin").value = settings.work;
+$("restMin").value = settings.rest;
+
+function showTimer() {
+  const m = String(Math.floor(left / 60)).padStart(2, "0");
+  const s = String(left % 60).padStart(2, "0");
+  $("timerDisplay").textContent = m + ":" + s;
+  $("timerMode").textContent = LABELS[mode];
+  $("timerCount").textContent = "Завершено помидоров: " + pomodoros;
+  document.title = timerId ? m + ":" + s + " · Планировщик" : "Планировщик учёбы";
+}
+
+let audioCtx = null;
+function unlockAudio() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  } catch (e) {}
+}
+const MEL = {
+  m1: { t: "triangle", n: [[523,.4],[659,.4],[784,.4],[1047,.6],[784,.4],[659,.4],[523,.6],[587,.4],[698,.4],[880,.4],[1175,.6],[880,.4],[698,.4],[1047,.8]] },
+  m2: { t: "square", n: [[392,.25],[392,.25],[523,.25],[392,.25],[659,.25],[392,.25],[784,.5],[0,.25],[392,.25],[392,.25],[523,.25],[392,.25],[659,.25],[587,.25],[523,.5],[0,.25],[659,.25],[784,.25],[1047,.25],[784,.25],[1047,.75]] },
+  m3: { t: "sine", n: [[1319,.9],[1047,.9],[1319,.9],[1568,1.2],[1319,.9],[1047,1.3]] }
+};
+function synth(key) {
+  try {
+    unlockAudio();
+    const m = MEL[key] || MEL.m1;
+    const peak = m.t === "square" ? 0.15 : 0.4;
+    let t0 = audioCtx.currentTime;
+    m.n.forEach((n) => {
+      if (n[0] > 0) {
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.type = m.t;
+        osc.frequency.value = n[0];
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(peak, t0 + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + n[1]);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(t0);
+        osc.stop(t0 + n[1] + 0.02);
+      }
+      t0 += n[1];
+    });
+  } catch (e) {}
+}
+// своя музыка хранится в браузере (IndexedDB)
+function idb() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open("planner", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("s");
+    r.onsuccess = () => res(r.result);
+    r.onerror = rej;
+  });
+}
+async function putFile(f) { const db = await idb(); db.transaction("s", "readwrite").objectStore("s").put(f, "song"); }
+async function getFile() {
+  try {
+    const db = await idb();
+    return await new Promise((res) => {
+      const q = db.transaction("s").objectStore("s").get("song");
+      q.onsuccess = () => res(q.result);
+      q.onerror = () => res(null);
+    });
+  } catch (e) { return null; }
+}
+async function beep() {
+  const key = $("soundSel").value;
+  if (navigator.vibrate) navigator.vibrate([400, 200, 400]);
+  if (key === "file") {
+    const f = await getFile();
+    if (f) {
+      const a = new Audio(URL.createObjectURL(f));
+      a.play().catch(() => synth("m1"));
+      setTimeout(() => a.pause(), 6000); // играет 6 секунд
+      return;
+    }
+  }
+  synth(key === "file" ? "m1" : key);
+}
+$("soundSel").value = localStorage.getItem("sound") || "m1";
+$("soundSel").onchange = () => localStorage.setItem("sound", $("soundSel").value);
+$("soundPrev").onclick = () => { unlockAudio(); beep(); };
+$("soundFile").onchange = async () => {
+  const f = $("soundFile").files[0];
+  if (!f) return;
+  await putFile(f);
+  $("soundSel").value = "file";
+  localStorage.setItem("sound", "file");
+  beep();
+};
+
+function stopTimer() {
+  clearInterval(timerId);
+  timerId = null;
+  $("timerStart").textContent = "▶ Старт";
+}
+function tick() {
+  left--;
+  if (left <= 0) {
+    beep();
+    if (mode === "work") pomodoros++;
+    mode = mode === "work" ? "rest" : "work";
+    left = settings[mode] * 60;
+    stopTimer();
+  }
+  showTimer();
+}
+function applySettings() {
+  let w = Math.round(Number($("workMin").value)), r = Math.round(Number($("restMin").value));
+  if (!(w >= 1)) w = settings.work;
+  if (!(r >= 1)) r = settings.rest;
+  w = Math.min(w, 180);
+  r = Math.min(r, 60);
+  settings = { work: w, rest: r };
+  $("workMin").value = w;
+  $("restMin").value = r;
+  localStorage.setItem("timerSettings", JSON.stringify(settings));
+  if (!timerId) left = settings[mode] * 60;
+  showTimer();
+}
+$("workMin").onchange = applySettings;
+$("restMin").onchange = applySettings;
+$("timerStart").onclick = () => {
+  unlockAudio();
+  if (timerId) {
+    stopTimer();
+  } else {
+    timerId = setInterval(tick, 1000);
+    $("timerStart").textContent = "⏸ Пауза";
+  }
+  showTimer();
+};
+$("timerReset").onclick = () => {
+  stopTimer();
+  mode = "work";
+  left = settings.work * 60;
+  showTimer();
+};
+
+// ===== Статистика =====
+function renderStats() {
+  const total = tasks.length, done = tasks.filter((t) => t.done).length;
+  const items = [
+    [total, "Всего задач"], [done, "Выполнено"], [total - done, "Осталось"],
+    [(total ? Math.round((done / total) * 100) : 0) + "%", "Общий прогресс"],
+    ["🔥 " + getStreak(), "Серия дней"], [exams.length, "Экзаменов впереди"]
+  ];
+  $("statsBox").innerHTML = "";
+  items.forEach((it) => {
+    const card = el("div", "stat-card");
+    card.append(el("p", "stat-number", it[0]), el("p", "stat-name", it[1]));
+    $("statsBox").appendChild(card);
+  });
+}
+
+// ===== Язык и цвет =====
+const D = [
+["📚 Мой планировщик","📚 Менің жоспарлаушым","📚 My Planner"],["📅 День","📅 Күн","📅 Day"],["🗓 Неделя","🗓 Апта","🗓 Week"],
+["🎓 Пары","🎓 Сабақ","🎓 Classes"],["📝 Экзамены","📝 Емтихан","📝 Exams"],["⏱ Таймер","⏱ Таймер","⏱ Timer"],["📊 Статистика","📊 Статистика","📊 Stats"],
+["Перейти к сегодня","Бүгінге өту","Go to today"],["Нет задач","Тапсырма жоқ","No tasks"],
+["🎉 Все задачи выполнены! Ты молодец!","🎉 Барлық тапсырма орындалды! Жарайсың!","🎉 All tasks done! Well done!"],
+["Напиши здесь...","Мұнда жаз...","Write here..."],["🔴 Важно","🔴 Маңызды","🔴 Important"],["🟡 Средне","🟡 Орташа","🟡 Medium"],["🟢 Не срочно","🟢 Шұғыл емес","🟢 Not urgent"],
+["⏰ Указать время","⏰ Уақытты көрсету","⏰ Set time"],["➕ Добавить","➕ Қосу","➕ Add"],
+["На этот день задач нет. Добавь первую! ✨","Бұл күнге тапсырма жоқ. Біріншісін қос! ✨","No tasks for this day. Add the first one! ✨"],
+["➡️ Перенести невыполненные на следующий день","➡️ Орындалмағандарды келесі күнге көшіру","➡️ Move unfinished tasks to next day"],
+["Понедельник","Дүйсенбі","Monday"],["Вторник","Сейсенбі","Tuesday"],["Среда","Сәрсенбі","Wednesday"],["Четверг","Бейсенбі","Thursday"],
+["Пятница","Жұма","Friday"],["Суббота","Сенбі","Saturday"],["Воскресенье","Жексенбі","Sunday"],
+["Предмет, например: Математика","Пән, мысалы: Математика","Subject, e.g. Math"],["➕ Добавить пару","➕ Сабақ қосу","➕ Add class"],
+["Название экзамена","Емтихан атауы","Exam name"],["➕ Добавить экзамен","➕ Емтихан қосу","➕ Add exam"],
+["📖 Учёба","📖 Оқу","📖 Study"],["☕ Отдых","☕ Демалыс","☕ Break"],["▶ Старт","▶ Бастау","▶ Start"],["⏸ Пауза","⏸ Тоқтату","⏸ Pause"],["↺ Сброс","↺ Қайта","↺ Reset"],
+["📖 Учёба (мин)","📖 Оқу (мин)","📖 Study (min)"],["☕ Отдых (мин)","☕ Демалыс (мин)","☕ Break (min)"],
+["🔔 Мелодия","🔔 Әуен","🔔 Sound"],["▶ Послушать","▶ Тыңдау","▶ Preview"],["🎵 Своя музыка","🎵 Өз музыкам","🎵 My music"],["🎵 Моя музыка","🎵 Менің музыкам","🎵 My music"],
+["🎹 Классика","🎹 Классика","🎹 Classic"],["🥁 Бит","🥁 Бит","🥁 Beat"],["🔔 Колокольчик","🔔 Қоңырау","🔔 Bell"],
+["Всего задач","Барлық тапсырма","Total tasks"],["Выполнено","Орындалды","Done"],["Осталось","Қалды","Left"],["Общий прогресс","Жалпы прогресс","Overall progress"],
+["Серия дней","Күн қатары","Day streak"],["Экзаменов впереди","Алдағы емтихан","Upcoming exams"],
+["Сегодня","Бүгін","Today"],["Завтра","Ертең","Tomorrow"],["Вчера","Кеше","Yesterday"],["Свободный день","Бос күн","Free day"],
+["🎓 Пары в этот день:","🎓 Осы күнгі сабақтар:","🎓 Classes this day:"],
+["Расписание пустое. Добавь первую пару! 🎓","Кесте бос. Бірінші сабақты қос! 🎓","Schedule is empty. Add the first class! 🎓"],
+["Экзаменов пока нет 🙌","Әзірге емтихан жоқ 🙌","No exams yet 🙌"],["Прошёл","Өтті","Passed"],["Сегодня! 💪","Бүгін! 💪","Today! 💪"],
+["Перенесено задач на следующий день: ","Келесі күнге көшірілген тапсырма: ","Tasks moved to next day: "],
+["Укажи предмет и время начала","Пән мен басталу уақытын көрсет","Enter subject and start time"],
+["Укажи название и дату","Атауы мен күнін көрсет","Enter name and date"],["Исправь задачу:","Тапсырманы түзет:","Edit task:"]
+];
+const DICT = {};
+D.forEach((r) => { DICT[r[0]] = [r[1], r[2]]; });
+const PAT = [
+  [/^Выполнено (\d+) из (\d+) \((\d+)%\)$/, "Орындалды $1/$2 ($3%)", "Done $1 of $2 ($3%)"],
+  [/^🔥 (\d+) дн\. подряд$/, "🔥 қатарынан $1 күн", "🔥 $1 day streak"],
+  [/^Осталось (\d+) дн\.$/, "Қалды $1 күн", "$1 days left"],
+  [/^Завершено помидоров: (\d+)$/, "Аяқталған помидор: $1", "Pomodoros done: $1"]
+];
+let LANG = "ru";
+function tr(s) {
+  if (LANG === "ru" || !s) return s;
+  const m = s.match(/^(\s*)([\s\S]*?)(\s*)$/), c = m[2], i = LANG === "kk" ? 0 : 1;
+  if (DICT[c]) return m[1] + DICT[c][i] + m[3];
+  for (const p of PAT) if (p[0].test(c)) return m[1] + c.replace(p[0], p[1 + i]) + m[3];
+  if (c.includes(" · ")) return m[1] + c.split(" · ").map(tr).join(" · ") + m[3];
+  return s;
+}
+function walk(n) {
+  if (n.nodeType === 3) {
+    if (n.__ru === undefined) n.__ru = n.nodeValue;
+    n.nodeValue = tr(n.__ru);
+  } else if (n.nodeType === 1 && n.tagName !== "SCRIPT" && n.tagName !== "STYLE") {
+    if (n.placeholder) {
+      if (!n.dataset.ru) n.dataset.ru = n.placeholder;
+      n.placeholder = tr(n.dataset.ru);
+    }
+    n.childNodes.forEach(walk);
+  }
+}
+function setLang(l) {
+  LANG = l;
+  LOC = { ru: "ru-RU", kk: "kk-KZ", en: "en-GB" }[l];
+  localStorage.setItem("lang", l);
+  $("langSel").value = l;
+  document.documentElement.lang = l;
+  showTab(document.querySelector(".tab.active").dataset.tab);
+  walk(document.body);
+}
+$("langSel").onchange = () => setLang($("langSel").value);
+new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach(walk))).observe(document.body, { childList: true, subtree: true });
+
+function applyColor() {
+  const c = localStorage.getItem("color") || "";
+  document.body.classList.remove("c-green", "c-pink", "c-orange");
+  if (c) document.body.classList.add(c);
+  $("colorSel").value = c;
+}
+$("colorSel").onchange = () => { localStorage.setItem("color", $("colorSel").value); applyColor(); };
+
+// ===== Запуск =====
+applyTheme();
+save();
+showTab("day");
+applyColor();
+setLang(localStorage.getItem("lang") || "ru");
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>
