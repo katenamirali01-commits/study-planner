@@ -285,6 +285,23 @@ svg,img{max-width:100%}
 .skip:focus{left:8px}
 :focus-visible{outline:3px solid var(--b1);outline-offset:2px}
 @media(pointer:coarse){.small-btn,.icon-btn,.nav-btn{min-width:44px;min-height:44px}}
+/* ===== тірі фондар ===== */
+#bgfx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.layout{position:relative;z-index:1}
+.cloud{position:absolute;left:0;width:140px;height:44px;background:#fff;border-radius:50px;transform:translateX(-300px);animation:drift linear infinite}
+.cloud::before,.cloud::after{content:"";position:absolute;background:inherit;border-radius:50%}
+.cloud::before{width:62px;height:62px;top:-30px;left:22px}
+.cloud::after{width:84px;height:84px;top:-42px;left:56px}
+.cloud.pink{background:#ffd8a8}
+@keyframes drift{from{transform:translateX(-300px) scale(var(--s,1))}to{transform:translateX(calc(100vw + 300px)) scale(var(--s,1))}}
+.sunglow{position:absolute;left:50%;top:56%;width:440px;height:440px;margin:-220px 0 0 -220px;border-radius:50%;background:radial-gradient(circle,rgba(255,212,59,.55),transparent 70%);animation:glow 5s ease-in-out infinite}
+@keyframes glow{50%{transform:scale(1.18);opacity:.65}}
+.fall{position:absolute;top:-40px;animation:fallDown linear infinite}
+@keyframes fallDown{0%{transform:translate(0,-40px) rotate(0)}50%{transform:translate(var(--x,40px),50vh) rotate(180deg)}100%{transform:translate(calc(var(--x,40px) * -.5),110vh) rotate(360deg)}}
+.star{position:absolute;background:#fff;border-radius:50%;animation:tw ease-in-out infinite}
+@keyframes tw{50%{opacity:.15;transform:scale(.6)}}
+.shoot{position:absolute;width:130px;height:2px;background:linear-gradient(90deg,#fff,transparent);opacity:0;transform:rotate(-35deg);animation:shoot 9s ease-in infinite}
+@keyframes shoot{0%,86%{opacity:0;transform:translate(0,0) rotate(-35deg)}89%{opacity:1}100%{opacity:0;transform:translate(-430px,300px) rotate(-35deg)}}
 </style>
 </head>
 <body>
@@ -457,6 +474,7 @@ svg,img{max-width:100%}
     </div>
     <h3 class="opt-title">🎨 Фон сайта</h3>
     <div id="bgGallery" class="bg-gal"></div>
+    <label class="check" style="margin-top:6px"><input type="checkbox" id="fxToggle"> ✨ Анимация фона</label>
     <button id="tourBtn" class="soft-btn" style="margin-left:0">🎓 Показать обучение</button>
     <label class="soft-btn" style="cursor:pointer;margin-left:0">📷 Свой фон из фото<input type="file" id="bgFile" accept="image/*" hidden></label>
   </section>
@@ -1109,6 +1127,28 @@ function renderPet() {
   box.appendChild(el("p", "muted", "Новая одежда открывается за рекорд серии дней"));
 }
 
+// ===== Живые фоны (анимация) =====
+function applyFx() {
+  let fx = $("bgfx");
+  if (!fx) { fx = el("div"); fx.id = "bgfx"; fx.setAttribute("aria-hidden", "true"); document.body.prepend(fx); }
+  fx.innerHTML = "";
+  const k = localStorage.getItem("bg") || "";
+  if (localStorage.getItem("fx") === "off" || !SCENES[k]) return;
+  const n = innerWidth < 600 ? 0.5 : 1, R = (a, b) => a + Math.random() * (b - a);
+  const add = (cls, css, txt) => { const d = el("div", cls); d.style.cssText = css || ""; if (txt) d.textContent = txt; fx.appendChild(d); };
+  const clouds = (cls) => { for (let i = 0; i < Math.round(5 * n); i++) add("cloud " + cls, "top:" + R(3, 36) + "%;--s:" + R(0.6, 1.3).toFixed(2) + ";opacity:" + R(0.5, 0.9).toFixed(2) + ";animation-duration:" + R(70, 140).toFixed(0) + "s;animation-delay:-" + R(0, 120).toFixed(0) + "s"); };
+  const fall = (glyphs, cnt) => { for (let i = 0; i < Math.round(cnt * n); i++) add("fall", "left:" + R(0, 100).toFixed(1) + "%;font-size:" + R(14, 26).toFixed(0) + "px;--x:" + R(-90, 90).toFixed(0) + "px;animation-duration:" + R(9, 18).toFixed(1) + "s;animation-delay:-" + R(0, 18).toFixed(1) + "s", glyphs[i % glyphs.length]); };
+  if (k === "mountains") clouds("");
+  if (k === "sunset") { add("sunglow"); clouds("pink"); }
+  if (k === "forest") fall(["🍃", "🍂", "🌿"], 26);
+  if (k === "sakura") fall(["🌸", "💮", "🌸"], 28);
+  if (k === "night") {
+    for (let i = 0; i < Math.round(70 * n); i++) { const z = R(1.5, 3.5).toFixed(1); add("star", "left:" + R(0, 100).toFixed(1) + "%;top:" + R(0, 62).toFixed(1) + "%;width:" + z + "px;height:" + z + "px;animation-duration:" + R(2, 5).toFixed(1) + "s;animation-delay:" + R(0, 4).toFixed(1) + "s"); }
+    add("shoot", "top:8%;left:72%");
+  }
+}
+$("fxToggle").onchange = () => { localStorage.setItem("fx", $("fxToggle").checked ? "on" : "off"); applyFx(); if (window.cloudSave) window.cloudSave(); };
+
 // ===== Профиль и фоны =====
 const rnd = (i) => Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
 const SC = (inner, g1, g2) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${g1}"/><stop offset="1" stop-color="${g2}"/></linearGradient></defs><rect width="1600" height="900" fill="url(#g)"/>${inner}</svg>`;
@@ -1151,6 +1191,7 @@ async function idbGet(k) {
 }
 const sceneUrl = (k) => 'url("data:image/svg+xml;utf8,' + encodeURIComponent(SCENES[k][1]()) + '")';
 async function applyBg() {
+  applyFx();
   const k = localStorage.getItem("bg") || "", st = document.body.style;
   let url = "";
   if (k === "photo") { const f = await idbGet("bg"); if (f) url = "url(" + URL.createObjectURL(f) + ")"; }
@@ -1197,6 +1238,7 @@ function renderProfile() {
     c.append(el("p", "stat-number", it[0]), el("p", "stat-name", it[1]));
     $("profStats").appendChild(c);
   });
+  $("fxToggle").checked = localStorage.getItem("fx") !== "off";
   renderBgGallery();
 }
 $("tourBtn").onclick = startTour;
@@ -1451,7 +1493,7 @@ function renderSide() {
 }
 
 // ===== Связь с облаком (аккаунт) =====
-const PREF_KEYS = ["theme", "color", "lang", "timerSettings", "sound", "petBest", "memBest", "pet", "profileName", "bg"];
+const PREF_KEYS = ["theme", "color", "lang", "timerSettings", "sound", "petBest", "memBest", "pet", "profileName", "bg", "fx"];
 window.planner = {
   get: () => {
     const prefs = {};
@@ -1534,7 +1576,7 @@ const D = [
 ["Питомец радуется твоей серии и открывает новую одежду 🐾","Питомец сенің сериясыңа қуанып, жаңа киім ашады 🐾","Your pet cheers your streak and unlocks new outfits 🐾"],
 ["Создай аккаунт, чтобы данные были на всех устройствах и можно было добавлять друзей.","Деректер барлық құрылғыда болуы және достар қосу үшін аккаунт жаса.","Create an account to keep your data on all devices and add friends."],
 ["Готово! Удачной учёбы 🎉","Дайын! Оқуда сәттілік 🎉","All set! Good luck with your studies 🎉"],
-["Отмена","Бас тарту","Cancel"],
+["Отмена","Бас тарту","Cancel"],["✨ Анимация фона","✨ Фон анимациясы","✨ Background animation"],
 ["Задача добавлена ✅","Тапсырма қосылды ✅","Task added ✅"],
 ["Задача изменена ✏️","Тапсырма өзгертілді ✏️","Task updated ✏️"],
 ["Далее →","Келесі →","Next →"],
