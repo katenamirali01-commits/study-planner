@@ -182,6 +182,15 @@ body.dark nav.tabs .tab{background:rgba(255,255,255,.08)}
 body.dark .home-grid .side-card,body.dark .stat-card,body.dark .week-card,body.dark li,body.dark .acc,body.dark .progress-box,body.dark .day-classes{background:rgba(255,255,255,.07)}
 @media(max-width:800px){nav.tabs{padding-bottom:calc(6px + env(safe-area-inset-bottom))}.layout .app{margin-bottom:calc(84px + env(safe-area-inset-bottom))}}
 body{padding-top:env(safe-area-inset-top)}
+.room{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;padding:18px 8px 0;border-radius:18px;min-height:150px;background:linear-gradient(#ffe8cc 0 72%,#c68642 72% 100%)}
+.room-pet{text-align:center;width:104px;margin:0 2px}
+.room-pet svg{width:96px;height:auto}
+.room-name{display:inline-block;font-size:12px;background:rgba(255,255,255,.8);color:#212529;border-radius:8px;padding:1px 7px;margin:2px 0 8px}
+.fr-card{cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal-card{background:var(--card);color:var(--text);border-radius:20px;padding:22px;max-width:400px;width:100%;text-align:center;max-height:90vh;overflow:auto}
+.modal .prof-av svg{width:200px;height:auto}
+.modal .prof-stats{margin-top:14px}
 </style>
 </head>
 <body>
@@ -323,6 +332,8 @@ body{padding-top:env(safe-area-inset-top)}
       <div class="row"><input type="text" id="frCode" readonly><button id="frCopy" class="soft-btn">📋</button></div>
       <div class="row"><input type="text" id="frAdd" placeholder="Код друга"><button id="frAddBtn" class="main-btn small">➕</button></div>
       <p id="frMsg" class="muted"></p>
+      <h3 class="opt-title">🏠 Комната питомцев</h3>
+      <div id="room" class="room"></div>
       <div id="friendList"></div>
     </div>
   </section>
@@ -362,6 +373,8 @@ body{padding-top:env(safe-area-inset-top)}
   <section id="statsTab" class="hidden"><div id="statsBox" class="stats-grid"></div></section>
 </div>
 </div>
+
+<div id="frModal" class="modal hidden"><div class="modal-card"><button id="frClose" class="icon-btn" style="float:right">✖</button><div id="frModalBody"></div></div></div>
 
 <script>
 let LOC = "ru-RU";
@@ -863,6 +876,7 @@ function renderStats() {
 const COLORS = ["#ffa94d", "#adb5bd", "#f783ac", "#74c0fc", "#8ce99a", "#b197fc"];
 // [id, значок, сколько дней рекорда серии нужно]
 const OUT = {
+  species: [["cat", "🐱", 0], ["bunny", "🐰", 0], ["dog", "🐶", 3], ["bear", "🐻", 7]],
   head: [["", "🚫", 0], ["grad", "🎓", 0], ["cap", "🧢", 0], ["beanie", "❄️", 0], ["party", "🎉", 0], ["cowboy", "🤠", 10], ["crown", "👑", 14], ["wizard", "🧙", 21], ["top", "🎩", 30]],
   face: [["", "🚫", 0], ["glass", "👓", 0], ["sun", "😎", 3], ["heart", "😍", 5], ["star", "🤩", 14]],
   neck: [["", "🚫", 0], ["bow", "🎀", 0], ["tie", "👔", 0], ["scarf", "🧣", 7], ["medal", "🏅", 10], ["lei", "🌺", 21]],
@@ -897,7 +911,20 @@ const BG = {
   hearts: `<rect width="200" height="205" rx="24" fill="#ffe3ec"/><text x="18" y="38" font-size="20" fill="#f06595">♥</text><text x="165" y="50" font-size="14" fill="#f06595">♥</text><text x="172" y="130" font-size="20" fill="#f783ac">♥</text><text x="12" y="140" font-size="14" fill="#f783ac">♥</text><text x="20" y="195" font-size="16" fill="#f06595">♥</text>`,
   rainbow: `<rect width="200" height="205" rx="24" fill="#e7f5ff"/><g fill="none" stroke-width="8"><path d="M20 130 A80 80 0 0 1 180 130" stroke="#fa5252"/><path d="M28 130 A72 72 0 0 1 172 130" stroke="#ff922b"/><path d="M36 130 A64 64 0 0 1 164 130" stroke="#fcc419"/><path d="M44 130 A56 56 0 0 1 156 130" stroke="#51cf66"/><path d="M52 130 A48 48 0 0 1 148 130" stroke="#339af0"/></g>`
 };
-let pet = { color: COLORS[0], head: "grad", face: "", neck: "", bg: "" };
+const SPECIES = {
+  cat: { ears: (c) => `<path d="M46 78 L52 30 L88 54 Z M154 78 L148 30 L112 54 Z" fill="${c}"/><path d="M56 66 L58 42 L76 54 Z M144 66 L142 42 L124 54 Z" fill="#ffc9c9"/>` },
+  bunny: { ears: (c) => `<ellipse cx="70" cy="34" rx="15" ry="42" fill="${c}" transform="rotate(-8 70 34)"/><ellipse cx="130" cy="34" rx="15" ry="42" fill="${c}" transform="rotate(8 130 34)"/><ellipse cx="70" cy="36" rx="7" ry="30" fill="#ffc9c9" transform="rotate(-8 70 36)"/><ellipse cx="130" cy="36" rx="7" ry="30" fill="#ffc9c9" transform="rotate(8 130 36)"/>` },
+  dog: {
+    ears: (c) => `<ellipse cx="44" cy="92" rx="17" ry="36" fill="${c}" transform="rotate(14 44 92)"/><ellipse cx="156" cy="92" rx="17" ry="36" fill="${c}" transform="rotate(-14 156 92)"/><ellipse cx="44" cy="92" rx="17" ry="36" fill="#000" opacity=".18" transform="rotate(14 44 92)"/><ellipse cx="156" cy="92" rx="17" ry="36" fill="#000" opacity=".18" transform="rotate(-14 156 92)"/>`,
+    post: `<ellipse cx="100" cy="109" rx="8" ry="6" fill="#2b2b3a"/>`
+  },
+  bear: {
+    ears: (c) => `<circle cx="56" cy="50" r="20" fill="${c}"/><circle cx="144" cy="50" r="20" fill="${c}"/><circle cx="56" cy="50" r="10" fill="#ffc9c9"/><circle cx="144" cy="50" r="10" fill="#ffc9c9"/>`,
+    pre: `<ellipse cx="100" cy="118" rx="26" ry="19" fill="#fff" opacity=".55"/>`,
+    post: `<ellipse cx="100" cy="108" rx="8" ry="6" fill="#2b2b3a"/>`
+  }
+};
+let pet = { species: "cat", color: COLORS[0], head: "grad", face: "", neck: "", bg: "" };
 try { Object.assign(pet, JSON.parse(localStorage.getItem("pet")) || {}); } catch (e) {}
 const savePet = () => { localStorage.setItem("pet", JSON.stringify(pet)); if (window.cloudSave) window.cloudSave(); };
 
@@ -926,11 +953,10 @@ function petSVG(mood, P) {
     ${BG[P.bg] || ""}
     <ellipse cx="100" cy="168" rx="50" ry="34" fill="${P.color}"/>
     <ellipse cx="100" cy="174" rx="28" ry="22" fill="#fff" fill-opacity=".5"/>
-    <path d="M46 78 L52 30 L88 54 Z M154 78 L148 30 L112 54 Z" fill="${P.color}"/>
-    <path d="M56 66 L58 42 L76 54 Z M144 66 L142 42 L124 54 Z" fill="#ffc9c9"/>
+    ${(SPECIES[P.species] || SPECIES.cat).ears(P.color)}
     <circle cx="100" cy="100" r="62" fill="${P.color}"/>
     <circle cx="66" cy="114" r="8" fill="#ff8787" fill-opacity=".55"/><circle cx="134" cy="114" r="8" fill="#ff8787" fill-opacity=".55"/>
-    ${eyes}<ellipse cx="100" cy="110" rx="5" ry="3.5" fill="#e64980"/>${mouth}
+    ${(SPECIES[P.species] || {}).pre || ""}${eyes}<ellipse cx="100" cy="110" rx="5" ry="3.5" fill="#e64980"/>${mouth}${(SPECIES[P.species] || {}).post || ""}
     ${FACE[P.face] || ""}${NECK[P.neck] || ""}${HEAD[P.head] || ""}
   </svg>`;
 }
@@ -960,7 +986,7 @@ function renderPet() {
     row.appendChild(b);
   });
   box.appendChild(row);
-  [["head", "Головной убор"], ["face", "Очки"], ["neck", "На шею"], ["bg", "Фон"]].forEach((gr) => {
+  [["species", "Вид питомца"], ["head", "Головной убор"], ["face", "Очки"], ["neck", "На шею"], ["bg", "Фон"]].forEach((gr) => {
     box.appendChild(el("div", "opt-title", gr[1]));
     const r = el("div", "opts");
     OUT[gr[0]].forEach((o) => {
@@ -1223,7 +1249,7 @@ window.planner = {
     saveLocal();
     if (d.prefs) {
       PREF_KEYS.forEach((k) => { if (d.prefs[k] !== undefined) localStorage.setItem(k, d.prefs[k]); });
-      try { pet = Object.assign({ color: COLORS[0], head: "grad", face: "", neck: "", bg: "" }, JSON.parse(localStorage.getItem("pet") || "{}")); } catch (e) {}
+      try { pet = Object.assign({ species: "cat", color: COLORS[0], head: "grad", face: "", neck: "", bg: "" }, JSON.parse(localStorage.getItem("pet") || "{}")); } catch (e) {}
       applyTheme(); applyColor(); applyBg();
       const l = localStorage.getItem("lang");
       if (l && l !== LANG) setLang(l);
@@ -1234,7 +1260,7 @@ window.planner = {
 };
 window.APP = {
   el: el, petSVG: petSVG, todayISO: todayISO, addDays: addDays,
-  info: () => ({ streak: getStreak(), best: bestStreak(), active: dayActive(todayISO), day: todayISO, pet: pet })
+  info: () => ({ done: tasks.filter((t) => t.done).length, streak: getStreak(), best: bestStreak(), active: dayActive(todayISO), day: todayISO, pet: pet })
 };
 function renderFriends() {
   if (window.loadFriends) window.loadFriends(); else $("frLogin").classList.remove("hidden");
@@ -1286,7 +1312,7 @@ const D = [
 ["Эта почта уже зарегистрирована","Бұл пошта тіркелген","This email is already registered"],
 ["Пароль слишком короткий (минимум 6 символов)","Құпиясөз тым қысқа (кемінде 6 таңба)","Password too short (min. 6 characters)"],
 ["Неправильная почта","Пошта дұрыс емес","Invalid email"],["Ошибка сохранения","Сақтау қатесі","Save error"],
-["👥 Друзья","👥 Достар","👥 Friends"],["🏠 Главная","🏠 Басты бет","🏠 Home"],["👤 Профиль","👤 Профиль","👤 Profile"],["🎨 Фон сайта","🎨 Сайт фоны","🎨 Site background"],
+["👥 Друзья","👥 Достар","👥 Friends"],["🏠 Главная","🏠 Басты бет","🏠 Home"],["🏠 Комната питомцев","🏠 Жануарлар бөлмесі","🏠 Pets room"],["Вид питомца","Жануар түрі","Pet type"],["👤 Профиль","👤 Профиль","👤 Profile"],["🎨 Фон сайта","🎨 Сайт фоны","🎨 Site background"],
 ["📷 Свой фон из фото","📷 Өз суретімді фон ету","📷 Use my photo"],["Гость","Қонақ","Guest"],["Не выполнен вход","Кіру жасалмаған","Not signed in"],
 ["🎨 Градиент","🎨 Градиент","🎨 Gradient"],["📷 Моё фото","📷 Менің суретім","📷 My photo"],["🏔 Горы","🏔 Таулар","🏔 Mountains"],["🌲 Лес","🌲 Орман","🌲 Forest"],
 ["🌅 Закат","🌅 Күн батуы","🌅 Sunset"],["🌌 Ночь","🌌 Түн","🌌 Night"],["🌸 Сакура","🌸 Сакура","🌸 Sakura"],["📚 Планировщик","📚 Жоспарлаушы","📚 Planner"],["🐾 Открыть питомца","🐾 Питомецті ашу","🐾 Open pet"],["Войди в аккаунт (👤), чтобы добавить друзей","Дос қосу үшін аккаунтқа кір (👤)","Log in (👤) to add friends"],
@@ -1315,6 +1341,7 @@ const PAT = [
   [/^🎉 Победа! Ходов: (\d+)$/, "🎉 Жеңіс! Жүріс: $1", "🎉 You win! Moves: $1"],
   [/^через (\d+) мин\.$/, "$1 мин кейін", "in $1 min"],
   [/^через (\d+) ч\.$/, "$1 сағаттан кейін", "in $1 h"],
+  [/^Последняя активность: (.+)$/, "Соңғы белсенділік: $1", "Last active: $1"],
   [/^Привет, (.+)! 👋$/, "Сәлем, $1! 👋", "Hi, $1! 👋"],
   [/^🔒 (\d+) дн\.$/, "🔒 $1 күн", "🔒 $1 days"]
 ];
@@ -1400,7 +1427,7 @@ const myName = () => localStorage.getItem("profileName") || (user ? (user.displa
 async function publish() {
   if (!user) return;
   const i = window.APP.info();
-  await setDoc(doc(db, "profiles", user.uid), { name: myName(), streak: i.streak, best: i.best, active: i.active, day: i.day, pet: JSON.stringify(i.pet) }, { merge: true });
+  await setDoc(doc(db, "profiles", user.uid), { name: myName(), streak: i.streak, best: i.best, active: i.active, done: i.done, day: i.day, pet: JSON.stringify(i.pet) }, { merge: true });
 }
 async function push() {
   if (!user) return;
@@ -1435,19 +1462,53 @@ g("accReset").onclick = () => {
 g("accLogout").onclick = async () => { await signOut(auth); window.planner.set({}); window.showHello(); if (window.loadFriends) window.loadFriends(); };
 
 // ---- друзья ----
+const BASE = { species: "cat", color: "#ffa94d", head: "grad", face: "", neck: "", bg: "" };
+const lookOf = (p) => { let l = {}; try { l = JSON.parse(p.pet); } catch (e) {} return Object.assign({}, BASE, l); };
+const effOf = (p) => (p.day === window.APP.todayISO || p.day === window.APP.addDays(window.APP.todayISO, -1) ? p.streak || 0 : 0);
+const moodOf = (p, eff) => (p.day === window.APP.todayISO && p.active ? "happy" : eff > 0 ? "worried" : "sad");
+
+function showFriend(p, eff) {
+  const A = window.APP, body = g("frModalBody");
+  body.innerHTML = "";
+  const av = A.el("div", "prof-av");
+  av.innerHTML = A.petSVG(moodOf(p, eff), lookOf(p));
+  body.append(av, A.el("h2", null, p.name || "?"), A.el("p", "muted", "Последняя активность: " + (p.day ? new Date(p.day).toLocaleDateString() : "—")));
+  const st = A.el("div", "prof-stats");
+  [["🔥 " + eff, "Серия дней"], ["🏆 " + (p.best || 0), "Рекорд серии"], ["✅ " + (p.done || 0), "Выполнено"]].forEach((it) => {
+    const c = A.el("div", "stat-card");
+    c.append(A.el("p", "stat-number", it[0]), A.el("p", "stat-name", it[1]));
+    st.appendChild(c);
+  });
+  body.appendChild(st);
+  g("frModal").classList.remove("hidden");
+}
+g("frClose").onclick = () => g("frModal").classList.add("hidden");
+g("frModal").onclick = (e) => { if (e.target === g("frModal")) g("frModal").classList.add("hidden"); };
+
 function friendCard(p, id, eff) {
   const A = window.APP;
-  const mood = p.day === A.todayISO && p.active ? "happy" : eff > 0 ? "worried" : "sad";
-  let look = {};
-  try { look = JSON.parse(p.pet); } catch (e) {}
   const c = A.el("div", "fr-card"), pw = A.el("div", "fr-pet");
-  pw.innerHTML = A.petSVG(mood, Object.assign({ color: "#ffa94d", head: "grad", face: "", neck: "", bg: "" }, look));
+  pw.innerHTML = A.petSVG(moodOf(p, eff), lookOf(p));
   const info = A.el("div", "fr-info");
   info.append(A.el("div", "fr-name", p.name || "?"), A.el("div", "muted", "🔥 " + eff + " · 🏆 " + (p.best || 0)));
   const del = A.el("button", "small-btn del", "✖");
   del.onclick = async () => { await setDoc(doc(db, "users", user.uid), { friends: arrayRemove(id) }, { merge: true }); window.loadFriends(); };
   c.append(pw, info, del);
+  c.onclick = (e) => { if (!e.target.closest("button")) showFriend(p, eff); };
   return c;
+}
+function buildRoom(rows) {
+  const A = window.APP, room = g("room"), i = A.info();
+  room.innerHTML = "";
+  const members = [{ name: myName() || "Я", mood: i.active ? "happy" : i.streak > 0 ? "worried" : "sad", look: Object.assign({}, BASE, i.pet) }]
+    .concat(rows.slice(0, 7).map((r) => ({ name: r[1].name || "?", mood: moodOf(r[1], r[0]), look: lookOf(r[1]) })));
+  members.forEach((m, k) => {
+    const d = A.el("div", "room-pet");
+    d.innerHTML = A.petSVG(m.mood, m.look);
+    d.querySelector("svg").style.animation = "bob 2.5s ease-in-out " + k * 0.4 + "s infinite";
+    d.appendChild(A.el("div", "room-name", m.name));
+    room.appendChild(d);
+  });
 }
 window.loadFriends = async () => {
   g("frLogin").classList.toggle("hidden", !!user);
@@ -1457,20 +1518,21 @@ window.loadFriends = async () => {
   g("frCode").value = user.uid;
   const list = g("friendList");
   list.innerHTML = "";
+  const rows = [];
   try {
     const snap = await getDoc(doc(db, "users", user.uid));
     const ids = (snap.exists() && snap.data().friends) || [];
-    const A = window.APP, rows = [];
     for (const id of ids) {
       const ps = await getDoc(doc(db, "profiles", id));
       if (!ps.exists()) continue;
       const p = ps.data();
-      const eff = p.day === A.todayISO || p.day === A.addDays(A.todayISO, -1) ? p.streak : 0;
-      rows.push([eff, p, id]);
+      rows.push([effOf(p), p, id]);
     }
-    rows.sort((a, b) => b[0] - a[0]).forEach((r) => list.appendChild(friendCard(r[1], r[2], r[0])));
-    if (!rows.length) list.appendChild(A.el("p", "empty", "Друзей пока нет. Отправь другу свой код! 👋"));
+    rows.sort((a, b) => b[0] - a[0]);
+    rows.forEach((r) => list.appendChild(friendCard(r[1], r[2], r[0])));
+    if (!rows.length) list.appendChild(window.APP.el("p", "empty", "Друзей пока нет. Отправь другу свой код! 👋"));
   } catch (e) { frMsg("Ошибка сохранения"); }
+  buildRoom(rows);
 };
 g("frSave").onclick = () => {
   const n = g("frName").value.trim();
