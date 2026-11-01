@@ -138,43 +138,42 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
 .fr-pet svg{width:80px;height:auto}
 .fr-info{flex:1}
 .fr-name{font-weight:bold}
+body{padding:0}
+.layout{display:flex;gap:0;max-width:none;margin:0;align-items:stretch;justify-content:flex-start}
+nav.tabs{position:sticky;top:0;height:100vh;width:230px;flex:0 0 230px;flex-direction:column;flex-wrap:nowrap;gap:4px;margin:0;padding:20px 12px;background:var(--card);box-shadow:2px 0 20px rgba(0,0,0,.15);overflow-y:auto}
+.logo{font-size:20px;font-weight:bold;color:var(--accent);padding:6px 10px 18px}
+nav.tabs .tab{flex:none;text-align:left;padding:12px 14px;font-size:15px;border-radius:12px}
+.layout .app{flex:1;min-width:0;max-width:1000px;width:auto;margin:20px auto;padding:28px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;text-align:left;margin-bottom:22px}
+h1{margin:0;font-size:26px}
+.top{flex-wrap:wrap;justify-content:flex-end}
+#accBox{flex:1 1 100%}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.home-grid .side-card{background:var(--item);box-shadow:none;margin:0}
+#homePet{text-align:center;cursor:pointer}
+#homePet svg{width:150px;height:auto}
+@media(max-width:800px){
+  .layout{flex-direction:column}
+  nav.tabs{position:fixed;top:auto;bottom:0;left:0;right:0;width:100%;height:auto;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:6px;gap:4px;z-index:50;box-shadow:0 -4px 20px rgba(0,0,0,.2)}
+  nav.tabs .tab{flex:0 0 auto;font-size:12px;padding:8px 10px;text-align:center;white-space:nowrap}
+  .logo{display:none}
+  .layout .app{margin:10px;padding:16px;margin-bottom:84px;width:auto}
+  h1{font-size:20px}
+}
+.prof-head{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.prof-av svg{width:150px;height:auto}
+.prof-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.bg-gal{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.bg-th{width:120px;height:72px;border-radius:12px;background-size:cover;background-position:center;cursor:pointer;border:3px solid transparent;display:flex;align-items:flex-end;font-size:11px;color:#fff;text-shadow:0 1px 3px #000;padding:5px;background-color:var(--soft)}
+.bg-th.on{border-color:var(--b1)}
 </style>
 </head>
 <body>
 <div class="layout">
-<aside class="side" id="sideL">
-  <div class="side-card clock"><p id="clockTime" class="clock-time"></p><p id="clockDate" class="muted"></p></div>
-  <div class="side-card">
-    <div class="cal-head"><button id="calPrev" class="icon-btn">‹</button><b id="calTitle"></b><button id="calNext" class="icon-btn">›</button></div>
-    <div id="calGrid" class="cal"></div>
-  </div>
-</aside>
-<div class="app">
-  <header>
-    <h1>📚 Мой планировщик</h1>
-    <p id="hello" class="muted" style="margin:0 0 8px"></p>
-    <div class="top">
-      <span id="streak" class="streak">🔥 0</span>
-      <button id="accBtn" class="icon-btn">👤</button>
-      <button id="themeBtn" class="icon-btn">🌙</button>
-      <select id="colorSel"><option value="">🔵</option><option value="c-green">🟢</option><option value="c-pink">🌸</option><option value="c-orange">🟠</option></select>
-      <select id="langSel"><option value="ru">RU</option><option value="kk">ҚАЗ</option><option value="en">EN</option></select>
-    </div>
-  <div id="accBox" class="acc hidden">
-    <p id="accMsg" class="muted"></p>
-    <div id="accForm">
-      <input type="email" id="accEmail" class="full" placeholder="Почта">
-      <input type="password" id="accPass" class="full" placeholder="Пароль (мин. 6 символов)">
-      <div class="row center"><button id="accLogin" class="main-btn small">Войти</button><button id="accSignup" class="soft-btn">Регистрация</button></div>
-      <button id="accGoogle" class="soft-btn">🔵 Войти через Google</button>
-      <button id="accReset" class="soft-btn">Забыли пароль?</button>
-    </div>
-    <div id="accIn" class="hidden"><p><span>Вы вошли как</span> <b id="accWho"></b></p><button id="accLogout" class="soft-btn">Выйти</button></div>
-  </div>
-  </header>
-
-  <nav class="tabs">
-    <button class="tab active" data-tab="day">📅 День</button>
+<nav class="tabs">
+    <div class="logo">📚 Планировщик</div>
+    <button class="tab" data-tab="home">🏠 Главная</button>
+    <button class="tab" data-tab="day">📅 День</button>
     <button class="tab" data-tab="week">🗓 Неделя</button>
     <button class="tab" data-tab="classes">🎓 Пары</button>
     <button class="tab" data-tab="exams">📝 Экзамены</button>
@@ -183,7 +182,38 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
     <button class="tab" data-tab="friends">👥 Друзья</button>
     <button class="tab" data-tab="game">🎮 Игра</button>
     <button class="tab" data-tab="stats">📊 Статистика</button>
+    <button class="tab" data-tab="profile">👤 Профиль</button>
   </nav>
+<div class="app">
+  <header>
+    <div><h1 id="pageTitle">📚 Мой планировщик</h1>
+    <p id="hello" class="muted" style="margin:0"></p></div>
+    <div class="top">
+      <span id="streak" class="streak">🔥 0</span>
+      <button id="accBtn" class="icon-btn">👤</button>
+      <button id="themeBtn" class="icon-btn">🌙</button>
+      <select id="colorSel"><option value="">🔵</option><option value="c-green">🟢</option><option value="c-pink">🌸</option><option value="c-orange">🟠</option></select>
+      <select id="langSel"><option value="ru">RU</option><option value="kk">ҚАЗ</option><option value="en">EN</option></select>
+    </div>
+  </header>
+
+  
+
+  <section id="homeTab">
+    <div class="home-grid">
+  <div class="side-card clock"><p id="clockTime" class="clock-time"></p><p id="clockDate" class="muted"></p></div>
+  <div class="side-card">
+    <div class="cal-head"><button id="calPrev" class="icon-btn">‹</button><b id="calTitle"></b><button id="calNext" class="icon-btn">›</button></div>
+    <div id="calGrid" class="cal"></div>
+  </div>
+
+      <div id="homePet" class="side-card"></div>
+  <div class="side-card"><h3>⏰ Ближайшая пара</h3><div id="nextClass"></div></div>
+  <div class="side-card"><h3>📝 Ближайший экзамен</h3><div id="nextExam"></div></div>
+  <div class="side-card"><h3>📊 Сегодня</h3><div id="todaySum" class="stats-grid"></div></div>
+
+    </div>
+  </section>
 
   <section id="dayTab">
     <div class="day-nav">
@@ -281,6 +311,32 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
     </div>
   </section>
 
+  <section id="profileTab" class="hidden">
+    <div class="prof-head">
+      <div id="profAvatar" class="prof-av"></div>
+      <div style="flex:1;min-width:220px">
+        <h2 id="profName" style="margin:0"></h2>
+        <p id="profEmail" class="muted" style="margin:4px 0 8px"></p>
+        <div class="row"><input type="text" id="profEdit" placeholder="Твоё имя"><button id="profSave" class="soft-btn">Сохранить имя</button></div>
+      </div>
+    </div>
+    <div id="profStats" class="prof-stats"></div>
+    <div id="accBox" class="acc">
+    <p id="accMsg" class="muted"></p>
+    <div id="accForm">
+      <input type="email" id="accEmail" class="full" placeholder="Почта">
+      <input type="password" id="accPass" class="full" placeholder="Пароль (мин. 6 символов)">
+      <div class="row center"><button id="accLogin" class="main-btn small">Войти</button><button id="accSignup" class="soft-btn">Регистрация</button></div>
+      <button id="accGoogle" class="soft-btn">🔵 Войти через Google</button>
+      <button id="accReset" class="soft-btn">Забыли пароль?</button>
+    </div>
+    <div id="accIn" class="hidden"><p><span>Вы вошли как</span> <b id="accWho"></b></p><button id="accLogout" class="soft-btn">Выйти</button></div>
+    </div>
+    <h3 class="opt-title">🎨 Фон сайта</h3>
+    <div id="bgGallery" class="bg-gal"></div>
+    <label class="soft-btn" style="cursor:pointer;margin-left:0">📷 Свой фон из фото<input type="file" id="bgFile" accept="image/*" hidden></label>
+  </section>
+
   <section id="gameTab" class="hidden">
     <div class="row center"><span id="gameInfo" class="streak">🎯 Ходы: 0</span><span id="gameBest" class="streak">🏆 Рекорд: —</span></div>
     <div id="board" class="board"></div>
@@ -289,11 +345,6 @@ body.c-green:not(.dark){--accent:#0b7a5a}body.c-pink:not(.dark){--accent:#c2255c
 
   <section id="statsTab" class="hidden"><div id="statsBox" class="stats-grid"></div></section>
 </div>
-<aside class="side" id="sideR">
-  <div class="side-card"><h3>⏰ Ближайшая пара</h3><div id="nextClass"></div></div>
-  <div class="side-card"><h3>📝 Ближайший экзамен</h3><div id="nextExam"></div></div>
-  <div class="side-card"><h3>📊 Сегодня</h3><div id="todaySum" class="stats-grid"></div></div>
-</aside>
 </div>
 
 <script>
@@ -384,11 +435,23 @@ function confetti() {
 }
 
 // ===== Вкладки =====
-const TABS = ["day", "week", "classes", "exams", "timer", "pet", "friends", "game", "stats"];
+const TABS = ["home", "day", "week", "classes", "exams", "timer", "pet", "friends", "game", "stats", "profile"];
+let curTab = "";
+window.addEventListener("hashchange", () => {
+  const n = location.hash.slice(1);
+  if (TABS.includes(n) && $(n + "Tab").classList.contains("hidden")) showTab(n);
+});
 function showTab(name) {
   TABS.forEach((t) => $(t + "Tab").classList.toggle("hidden", t !== name));
-  document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
-  ({ day: renderDay, week: renderWeek, classes: renderClasses, exams: renderExams, timer: showTimer, pet: renderPet, friends: renderFriends, game: initGame, stats: renderStats })[name]();
+  document.querySelectorAll(".tab").forEach((b) => {
+    const on = b.dataset.tab === name;
+    b.classList.toggle("active", on);
+    if (on) { const t = b.firstChild; $("pageTitle").textContent = t.__ru !== undefined ? t.__ru : t.nodeValue; }
+  });
+  try { if (location.hash !== "#" + name) history.pushState(null, "", "#" + name); } catch (e) {}
+  if (curTab !== name) window.scrollTo(0, 0);
+  curTab = name;
+  try { ({ profile: renderProfile, home: renderHome, day: renderDay, week: renderWeek, classes: renderClasses, exams: renderExams, timer: showTimer, pet: renderPet, friends: renderFriends, game: initGame, stats: renderStats })[name](); } catch (e) { console.error(e); }
 }
 document.querySelectorAll(".tab").forEach((b) => { b.onclick = () => showTab(b.dataset.tab); });
 
@@ -895,6 +958,105 @@ function renderPet() {
   box.appendChild(el("p", "muted", "Новая одежда открывается за рекорд серии дней"));
 }
 
+// ===== Профиль и фоны =====
+const rnd = (i) => Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+const SC = (inner, g1, g2) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${g1}"/><stop offset="1" stop-color="${g2}"/></linearGradient></defs><rect width="1600" height="900" fill="url(#g)"/>${inner}</svg>`;
+function hills(col, base, amp, seed) {
+  let d = "M0 900 L0 " + base;
+  for (let x = 0; x <= 1600; x += 100) d += " L" + x + " " + Math.round(base - rnd(seed + x / 100) * amp);
+  return `<path d="${d} L1600 900 Z" fill="${col}"/>`;
+}
+function pines(col, base, n, seed) {
+  let o = "";
+  for (let i = 0; i < n; i++) {
+    const x = Math.round(rnd(seed + i) * 1600), h = 90 + rnd(seed + i + 50) * 120, w = Math.round(h * 0.45);
+    o += `<polygon points="${x},${Math.round(base - h)} ${x - w},${base} ${x + w},${base}" fill="${col}"/>`;
+  }
+  return o;
+}
+function stars(n) {
+  let o = "";
+  for (let i = 0; i < n; i++) o += `<circle cx="${Math.round(rnd(i) * 1600)}" cy="${Math.round(rnd(i + 300) * 520)}" r="${(1 + rnd(i + 600) * 2).toFixed(1)}" fill="#fff" opacity="${(0.4 + rnd(i + 900) * 0.6).toFixed(2)}"/>`;
+  return o;
+}
+function petals(n) {
+  let o = "";
+  for (let i = 0; i < n; i++) { const x = Math.round(rnd(i) * 1600), y = Math.round(rnd(i + 40) * 800); o += `<ellipse cx="${x}" cy="${y}" rx="9" ry="5" fill="#f783ac" opacity=".7" transform="rotate(${Math.round(rnd(i + 80) * 180)} ${x} ${y})"/>`; }
+  return o;
+}
+const SCENES = {
+  mountains: ["🏔 Горы", () => SC(`<circle cx="1250" cy="200" r="70" fill="#fff3bf"/><polygon points="0,900 0,520 250,260 450,480 650,200 900,520 1150,300 1400,500 1600,380 1600,900" fill="#748ffc"/><polygon points="650,200 600,262 650,250 690,275 740,250" fill="#fff"/><polygon points="250,260 215,310 250,300 285,320" fill="#fff"/>` + hills("#2b8a3e", 700, 120, 3) + hills("#1b5e20", 800, 90, 9), "#74c0fc", "#e7f5ff")],
+  forest: ["🌲 Лес", () => SC(`<circle cx="1300" cy="170" r="60" fill="#fff9db"/>` + hills("#2f9e44", 650, 140, 5) + pines("#2b8a3e", 700, 40, 1) + pines("#1b5e20", 820, 45, 70) + pines("#0b3d1a", 920, 40, 140), "#ffe8cc", "#b2f2bb")],
+  sunset: ["🌅 Закат", () => SC(`<circle cx="800" cy="520" r="150" fill="#ffd43b"/><rect y="520" width="1600" height="380" fill="#364fc7"/>` + [0, 1, 2, 3, 4, 5, 6].map((i) => `<rect x="${700 - i * 35}" y="${540 + i * 45}" width="${200 + i * 70}" height="8" rx="4" fill="#ffd43b" opacity="${(0.8 - i * 0.1).toFixed(1)}"/>`).join(""), "#5f3dc4", "#ff922b")],
+  night: ["🌌 Ночь", () => SC(`<circle cx="1300" cy="180" r="60" fill="#fff9db"/>` + stars(130) + hills("#0b1026", 720, 160, 21) + pines("#050816", 900, 40, 33), "#0b1026", "#3b2f7a")],
+  sakura: ["🌸 Сакура", () => SC(petals(80) + hills("#f8a5c2", 720, 100, 2) + hills("#e64980", 820, 80, 4), "#ffe3ec", "#fff0f6")]
+};
+async function idbPut(k, v) { const db = await idb(); db.transaction("s", "readwrite").objectStore("s").put(v, k); }
+async function idbGet(k) {
+  try {
+    const db = await idb();
+    return await new Promise((res) => { const q = db.transaction("s").objectStore("s").get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); });
+  } catch (e) { return null; }
+}
+const sceneUrl = (k) => 'url("data:image/svg+xml;utf8,' + encodeURIComponent(SCENES[k][1]()) + '")';
+async function applyBg() {
+  const k = localStorage.getItem("bg") || "", st = document.body.style;
+  let url = "";
+  if (k === "photo") { const f = await idbGet("bg"); if (f) url = "url(" + URL.createObjectURL(f) + ")"; }
+  else if (SCENES[k]) url = sceneUrl(k);
+  if (!url) { ["backgroundImage", "backgroundSize", "backgroundPosition", "backgroundAttachment"].forEach((q) => { st[q] = ""; }); return; }
+  st.backgroundImage = url; st.backgroundSize = "cover"; st.backgroundPosition = "center"; st.backgroundAttachment = "fixed";
+}
+async function renderBgGallery() {
+  const box = $("bgGallery"), cur = localStorage.getItem("bg") || "";
+  box.innerHTML = "";
+  const add = (key, label, img) => {
+    const t = el("div", "bg-th" + (cur === key ? " on" : ""), label);
+    if (img) t.style.backgroundImage = img;
+    else t.style.backgroundImage = "linear-gradient(135deg,#4c6ef5,#9775fa,#f783ac)";
+    t.onclick = () => { localStorage.setItem("bg", key); applyBg(); renderBgGallery(); if (window.cloudSave) window.cloudSave(); };
+    box.appendChild(t);
+  };
+  add("", "🎨 Градиент", null);
+  Object.keys(SCENES).forEach((k) => add(k, SCENES[k][0], sceneUrl(k)));
+  const f = await idbGet("bg");
+  if (f) add("photo", "📷 Моё фото", "url(" + URL.createObjectURL(f) + ")");
+}
+$("bgFile").onchange = () => {
+  const f = $("bgFile").files[0];
+  if (!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas"), k = Math.min(1, 1600 / img.width);
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    c.toBlob(async (b) => { await idbPut("bg", b); localStorage.setItem("bg", "photo"); applyBg(); renderBgGallery(); }, "image/jpeg", 0.82);
+  };
+  img.src = URL.createObjectURL(f);
+};
+function renderProfile() {
+  const st = getStreak(), best = bestStreak(), name = localStorage.getItem("profileName") || "";
+  $("profAvatar").innerHTML = petSVG(dayActive(todayISO) ? "happy" : st > 0 ? "worried" : "sad", pet);
+  $("profName").textContent = name || "Гость";
+  $("profEmail").textContent = window.__email || "Не выполнен вход";
+  $("profEdit").value = name;
+  $("profStats").innerHTML = "";
+  [["🔥 " + st, "Серия дней"], ["🏆 " + best, "Рекорд серии"], ["✅ " + tasks.filter((t) => t.done).length, "Выполнено"]].forEach((it) => {
+    const c = el("div", "stat-card");
+    c.append(el("p", "stat-number", it[0]), el("p", "stat-name", it[1]));
+    $("profStats").appendChild(c);
+  });
+  renderBgGallery();
+}
+$("profSave").onclick = () => {
+  const n = $("profEdit").value.trim();
+  if (!n) return;
+  localStorage.setItem("profileName", n);
+  if (window.cloudSave) window.cloudSave();
+  if (window.showHello) window.showHello();
+  renderProfile();
+};
+
 // ===== Игра: найди пары =====
 const EM = ["🍎", "🚀", "🎧", "📚", "⚽", "🎮", "🌙", "🔥"];
 let gOpen = [], gMoves = 0, gLeft = 8, gLock = false;
@@ -971,6 +1133,15 @@ function nextClassInfo() {
   }
   return null;
 }
+function renderHome() {
+  renderSide();
+  const st = getStreak(), mood = dayActive(todayISO) ? "happy" : st > 0 ? "worried" : "sad";
+  const box = $("homePet");
+  box.innerHTML = petSVG(mood, pet);
+  box.appendChild(el("div", "stat-number", "🔥 " + st));
+  box.appendChild(el("div", "muted", "🐾 Открыть питомца"));
+  box.onclick = () => showTab("pet");
+}
 function renderSide() {
   tickClock();
   // календарь месяца
@@ -1024,7 +1195,7 @@ function renderSide() {
 }
 
 // ===== Связь с облаком (аккаунт) =====
-const PREF_KEYS = ["theme", "color", "lang", "timerSettings", "sound", "petBest", "memBest", "pet", "profileName"];
+const PREF_KEYS = ["theme", "color", "lang", "timerSettings", "sound", "petBest", "memBest", "pet", "profileName", "bg"];
 window.planner = {
   get: () => {
     const prefs = {};
@@ -1037,7 +1208,7 @@ window.planner = {
     if (d.prefs) {
       PREF_KEYS.forEach((k) => { if (d.prefs[k] !== undefined) localStorage.setItem(k, d.prefs[k]); });
       try { pet = Object.assign({ color: COLORS[0], head: "grad", face: "", neck: "", bg: "" }, JSON.parse(localStorage.getItem("pet") || "{}")); } catch (e) {}
-      applyTheme(); applyColor();
+      applyTheme(); applyColor(); applyBg();
       const l = localStorage.getItem("lang");
       if (l && l !== LANG) setLang(l);
     }
@@ -1099,7 +1270,10 @@ const D = [
 ["Эта почта уже зарегистрирована","Бұл пошта тіркелген","This email is already registered"],
 ["Пароль слишком короткий (минимум 6 символов)","Құпиясөз тым қысқа (кемінде 6 таңба)","Password too short (min. 6 characters)"],
 ["Неправильная почта","Пошта дұрыс емес","Invalid email"],["Ошибка сохранения","Сақтау қатесі","Save error"],
-["👥 Друзья","👥 Достар","👥 Friends"],["Войди в аккаунт (👤), чтобы добавить друзей","Дос қосу үшін аккаунтқа кір (👤)","Log in (👤) to add friends"],
+["👥 Друзья","👥 Достар","👥 Friends"],["🏠 Главная","🏠 Басты бет","🏠 Home"],["👤 Профиль","👤 Профиль","👤 Profile"],["🎨 Фон сайта","🎨 Сайт фоны","🎨 Site background"],
+["📷 Свой фон из фото","📷 Өз суретімді фон ету","📷 Use my photo"],["Гость","Қонақ","Guest"],["Не выполнен вход","Кіру жасалмаған","Not signed in"],
+["🎨 Градиент","🎨 Градиент","🎨 Gradient"],["📷 Моё фото","📷 Менің суретім","📷 My photo"],["🏔 Горы","🏔 Таулар","🏔 Mountains"],["🌲 Лес","🌲 Орман","🌲 Forest"],
+["🌅 Закат","🌅 Күн батуы","🌅 Sunset"],["🌌 Ночь","🌌 Түн","🌌 Night"],["🌸 Сакура","🌸 Сакура","🌸 Sakura"],["📚 Планировщик","📚 Жоспарлаушы","📚 Planner"],["🐾 Открыть питомца","🐾 Питомецті ашу","🐾 Open pet"],["Войди в аккаунт (👤), чтобы добавить друзей","Дос қосу үшін аккаунтқа кір (👤)","Log in (👤) to add friends"],
 ["Твоё имя","Атың","Your name"],["Сохранить имя","Атын сақтау","Save name"],["Твой код друга:","Сенің дос кодың:","Your friend code:"],["Код друга","Дос коды","Friend code"],
 ["Друзей пока нет. Отправь другу свой код! 👋","Әзірге дос жоқ. Досыңа кодыңды жібер! 👋","No friends yet. Send your code to a friend! 👋"],
 ["Друг не найден","Дос табылмады","Friend not found"],["Это твой код","Бұл сенің кодың","This is your own code"],["Имя сохранено","Аты сақталды","Name saved"],["Код скопирован","Код көшірілді","Code copied"],
@@ -1172,8 +1346,9 @@ $("colorSel").onchange = () => { localStorage.setItem("color", $("colorSel").val
 // ===== Запуск =====
 applyTheme();
 save();
-showTab("day");
+{ const n0 = location.hash.slice(1); showTab(TABS.includes(n0) ? n0 : "home"); }
 applyColor();
+applyBg();
 setLang(localStorage.getItem("lang") || "ru");
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
 </script>
@@ -1194,7 +1369,7 @@ const firebaseConfig = {
 const g = (id) => document.getElementById(id);
 const msg = (t) => { g("accMsg").textContent = t; };
 const frMsg = (t) => { g("frMsg").textContent = t; };
-g("accBtn").onclick = () => g("accBox").classList.toggle("hidden");
+g("accBtn").onclick = () => showTab("profile");
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -1306,6 +1481,8 @@ g("frAddBtn").onclick = async () => {
 
 onAuthStateChanged(auth, async (u) => {
   user = u;
+  window.__email = u ? u.email : "";
+  if (typeof renderProfile === "function") renderProfile();
   if (unsub) { unsub(); unsub = null; }
   g("accForm").classList.toggle("hidden", !!u);
   g("accIn").classList.toggle("hidden", !u);
