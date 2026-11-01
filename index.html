@@ -191,6 +191,65 @@ body{padding-top:env(safe-area-inset-top)}
 .modal-card{background:var(--card);color:var(--text);border-radius:20px;padding:22px;max-width:400px;width:100%;text-align:center;max-height:90vh;overflow:auto}
 .modal .prof-av svg{width:200px;height:auto}
 .modal .prof-stats{margin-top:14px}
+/* ===== анимациялар ===== */
+@keyframes pageIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes rip{to{transform:scale(4);opacity:0}}
+section.enter{animation:pageIn .35s ease both}
+.enter .home-grid>*,.enter .stats-grid>*,.enter #taskList>li,.enter #examList>li,.enter #friendList>*,.enter #weekList>*,.enter #classList>*,.enter .bg-gal>*,.enter .opts>*,.enter .prof-stats>*,.enter .room-pet{animation:rise .5s ease both;animation-delay:calc(var(--i,0)*55ms)}
+button{font-family:inherit}
+.main-btn,.soft-btn,.tab,.icon-btn,.nav-btn,.small-btn,.opt,.swatch,.card{transition:transform .18s ease,box-shadow .18s ease,filter .18s ease,background .2s ease;position:relative;overflow:hidden}
+.main-btn:active,.soft-btn:active,.tab:active,.icon-btn:active,.nav-btn:active,.small-btn:active,.opt:active,.card:active{transform:scale(.95)!important}
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.5);transform:scale(0);animation:rip .6s ease-out forwards;pointer-events:none}
+.soft-btn .ripple,.small-btn .ripple,.icon-btn .ripple,.nav-btn .ripple,.opt .ripple,nav.tabs .tab:not(.active) .ripple{background:rgba(76,110,245,.28)}
+/* ===== hover эффектілері (тек тышқаны бар құрылғыларда) ===== */
+@media (hover:hover){
+  .main-btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(76,110,245,.4);filter:brightness(1.07);opacity:1}
+  .soft-btn:hover,.small-btn:hover,.icon-btn:hover,.nav-btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.15)}
+  nav.tabs .tab:hover{transform:translateX(5px);box-shadow:0 4px 14px rgba(0,0,0,.12)}
+  .opt:hover{transform:translateY(-3px) scale(1.06)}
+  .swatch:hover{transform:scale(1.18)}
+  .card:hover{transform:scale(1.07)}
+  .side-card,.stat-card,.week-card,.fr-card,li,.bg-th{transition:transform .2s ease,box-shadow .2s ease}
+  .side-card:hover,.stat-card:hover,.week-card:hover,.fr-card:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(0,0,0,.16)}
+  li:hover{transform:translateX(5px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+  .bg-th:hover{transform:scale(1.06)}
+  .tt-c:not(.empty){transition:transform .15s,box-shadow .15s}
+  .tt-c:not(.empty):hover{transform:scale(1.06);box-shadow:0 8px 18px rgba(0,0,0,.2);position:relative;z-index:2}
+  .cal-d{transition:background .15s,transform .15s}
+  .cal-d:hover{transform:scale(1.15)}
+  #homePet svg,.fr-pet svg{transition:transform .25s}
+  #homePet:hover svg{transform:scale(1.08) rotate(-3deg)}
+  .fr-card:hover .fr-pet svg{transform:scale(1.1)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ===== адаптив (телефон, планшет, компьютер) ===== */
+svg,img{max-width:100%}
+#classList{overflow-x:auto}
+.tt{min-width:340px}
+@media(max-width:1100px) and (min-width:801px){
+  nav.tabs{width:178px;flex-basis:178px}
+  nav.tabs .tab{font-size:13px;padding:11px 12px}
+  .logo{font-size:17px}
+  .layout .app{margin:14px;padding:22px}
+}
+@media(max-width:800px) and (min-width:601px){
+  .layout .app{margin:14px 18px calc(84px + env(safe-area-inset-bottom));padding:22px}
+  .home-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .home-grid{grid-template-columns:1fr}
+  .stat-number{font-size:24px}
+  .timer-display{font-size:52px}
+  .bg-th{width:calc(50% - 5px)}
+  .prof-head{justify-content:center;text-align:center}
+}
+@media(max-width:380px){
+  .layout .app{padding:12px;margin:6px 6px calc(84px + env(safe-area-inset-bottom))}
+  nav.tabs .tab{font-size:11px;padding:8px}
+  .top{gap:6px}
+}
+@media(min-width:1500px){.layout .app{max-width:1180px}}
 </style>
 </head>
 <body>
@@ -465,7 +524,7 @@ function confetti() {
 
 // ===== Вкладки =====
 const TABS = ["home", "day", "week", "classes", "exams", "timer", "pet", "friends", "game", "stats", "profile"];
-let curTab = "";
+let curTab = "", enterAnim = false;
 window.addEventListener("hashchange", () => {
   const n = location.hash.slice(1);
   if (TABS.includes(n) && $(n + "Tab").classList.contains("hidden")) showTab(n);
@@ -478,9 +537,19 @@ function showTab(name) {
     if (on) { const t = b.firstChild; $("pageTitle").textContent = t.__ru !== undefined ? t.__ru : t.nodeValue; }
   });
   try { if (location.hash !== "#" + name) history.pushState(null, "", "#" + name); } catch (e) {}
-  if (curTab !== name) window.scrollTo(0, 0);
+  if (curTab !== name) { window.scrollTo(0, 0); enterAnim = true; }
   curTab = name;
   try { ({ profile: renderProfile, home: renderHome, day: renderDay, week: renderWeek, classes: renderClasses, exams: renderExams, timer: showTimer, pet: renderPet, friends: renderFriends, game: initGame, stats: renderStats })[name](); } catch (e) { console.error(e); }
+  if (enterAnim) {
+    enterAnim = false;
+    const sec = $(name + "Tab");
+    sec.querySelectorAll(".home-grid,.stats-grid,#taskList,#examList,#friendList,#weekList,#classList,.bg-gal,.opts,.prof-stats").forEach((c) => [...c.children].forEach((e, i) => e.style.setProperty("--i", Math.min(i, 12))));
+    sec.classList.remove("enter");
+    void sec.offsetWidth;
+    sec.classList.add("enter");
+    clearTimeout(sec._t);
+    sec._t = setTimeout(() => sec.classList.remove("enter"), 1500);
+  }
 }
 document.querySelectorAll(".tab").forEach((b) => { b.onclick = () => showTab(b.dataset.tab); });
 
@@ -1098,6 +1167,18 @@ $("profSave").onclick = () => {
   if (window.showHello) window.showHello();
   renderProfile();
 };
+
+// ===== Эффект «ряби» на кнопках =====
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b || getComputedStyle(b).position === "static") return;
+  const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height);
+  const sp = document.createElement("span");
+  sp.className = "ripple";
+  sp.style.cssText = "width:" + d + "px;height:" + d + "px;left:" + (e.clientX - r.left - d / 2) + "px;top:" + (e.clientY - r.top - d / 2) + "px";
+  b.appendChild(sp);
+  setTimeout(() => sp.remove(), 650);
+});
 
 // ===== Игра: найди пары =====
 const EM = ["🍎", "🚀", "🎧", "📚", "⚽", "🎮", "🌙", "🔥"];
