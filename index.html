@@ -4,6 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Планировщик учёбы</title>
+<meta name="description" content="Планировщик учёбы для студента: задачи, расписание пар, экзамены, таймер Помодоро, питомец и друзья.">
+<link rel="canonical" href="https://katenamirali01-commits.github.io/study-planner/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Планировщик учёбы">
+<meta property="og:title" content="📚 Планировщик учёбы">
+<meta property="og:description" content="Задачи, расписание, экзамены, таймер, питомец и друзья в одном приложении для студента.">
+<meta property="og:url" content="https://katenamirali01-commits.github.io/study-planner/">
+<meta property="og:image" content="https://katenamirali01-commits.github.io/study-planner/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="📚 Планировщик учёбы">
+<meta name="twitter:description" content="Задачи, расписание, экзамены, таймер, питомец и друзья.">
+<meta name="twitter:image" content="https://katenamirali01-commits.github.io/study-planner/og-image.png">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4c6ef5">
 <meta name="mobile-web-app-capable" content="yes">
@@ -14,7 +29,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
 <style>
 *{box-sizing:border-box}
-:root{--b1:#4c6ef5;--b2:#7950f2;--bg:linear-gradient(135deg,#4c6ef5,#9775fa,#f783ac);--card:#fff;--text:#212529;--muted:#868e96;--soft:#f1f3ff;--item:#f8f9ff;--line:#dee2e6;--accent:#3b5bdb}
+:root{--b1:#4c6ef5;--b2:#7950f2;--bg:linear-gradient(135deg,#4c6ef5,#9775fa,#f783ac);--card:#fff;--text:#212529;--muted:#6c757d;--soft:#f1f3ff;--item:#f8f9ff;--line:#dee2e6;--accent:#3b5bdb}
 body.dark{--card:#1e2130;--text:#e9ecef;--muted:#9aa0b4;--soft:#2a2e45;--item:#262a3f;--line:#3a3f5c;--accent:#91a7ff}
 body{font-family:Arial,sans-serif;background:var(--bg);min-height:100vh;margin:0;padding:20px;color:var(--text)}
 body.dark{background:linear-gradient(135deg,#1a1b2e,#2b2250,#3d2250)}
@@ -250,11 +265,33 @@ svg,img{max-width:100%}
   .top{gap:6px}
 }
 @media(min-width:1500px){.layout .app{max-width:1180px}}
+/* ===== тосттар, терезелер, обучение, қолжетімділік ===== */
+@keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+#toasts{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:300;pointer-events:none;width:max-content;max-width:92vw}
+.toast{background:#212529;color:#fff;padding:12px 18px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);animation:toastIn .3s ease both;font-size:14px;transition:opacity .3s,transform .3s}
+.toast.warn{background:#c92a2a}
+.toast.out{opacity:0;transform:translateY(8px)}
+.dlg{text-align:left}
+.dlg-title{font-weight:bold;margin:0 0 12px}
+.dlg-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+.dlg-btns .soft-btn{margin:0}
+#tour{position:fixed;inset:0;z-index:400}
+.tour-spot{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(10,12,30,.68);transition:all .3s ease;pointer-events:none}
+.tour-card{position:fixed;width:min(320px,calc(100vw - 20px));background:var(--card);color:var(--text);border-radius:18px;padding:18px;box-shadow:0 12px 40px rgba(0,0,0,.4);transition:left .3s,top .3s}
+.tour-card p{margin:0 0 14px;line-height:1.5}
+.tour-btns{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tour-btns .soft-btn{display:inline-block;margin:0;padding:8px 12px}
+.skip{position:absolute;left:-999px;top:8px;background:#fff;color:#212529;padding:8px 12px;border-radius:8px;z-index:500}
+.skip:focus{left:8px}
+:focus-visible{outline:3px solid var(--b1);outline-offset:2px}
+@media(pointer:coarse){.small-btn,.icon-btn,.nav-btn{min-width:44px;min-height:44px}}
 </style>
 </head>
 <body>
+<a href="#main" class="skip">К содержимому</a>
+<noscript><p style="padding:20px;color:#fff">Для работы планировщика нужен JavaScript.</p></noscript>
 <div class="layout">
-<nav class="tabs">
+<nav class="tabs" aria-label="Главное меню">
     <div class="logo">📚 Планировщик</div>
     <button class="tab" data-tab="home">🏠 Главная</button>
     <button class="tab" data-tab="day">📅 День</button>
@@ -268,16 +305,16 @@ svg,img{max-width:100%}
     <button class="tab" data-tab="stats">📊 Статистика</button>
     <button class="tab" data-tab="profile">👤 Профиль</button>
   </nav>
-<div class="app">
+<div class="app" id="main" role="main">
   <header>
     <div><h1 id="pageTitle">📚 Мой планировщик</h1>
     <p id="hello" class="muted" style="margin:0"></p></div>
     <div class="top">
       <span id="streak" class="streak">🔥 0</span>
-      <button id="accBtn" class="icon-btn">👤</button>
-      <button id="themeBtn" class="icon-btn">🌙</button>
-      <select id="colorSel"><option value="">🔵</option><option value="c-green">🟢</option><option value="c-pink">🌸</option><option value="c-orange">🟠</option></select>
-      <select id="langSel"><option value="ru">RU</option><option value="kk">ҚАЗ</option><option value="en">EN</option></select>
+      <button id="accBtn" aria-label="Аккаунт и профиль" class="icon-btn">👤</button>
+      <button id="themeBtn" aria-label="Переключить тему" class="icon-btn">🌙</button>
+      <select id="colorSel" aria-label="Цвет оформления"><option value="">🔵</option><option value="c-green">🟢</option><option value="c-pink">🌸</option><option value="c-orange">🟠</option></select>
+      <select id="langSel" aria-label="Язык"><option value="ru">RU</option><option value="kk">ҚАЗ</option><option value="en">EN</option></select>
     </div>
   </header>
 
@@ -287,7 +324,7 @@ svg,img{max-width:100%}
     <div class="home-grid">
   <div class="side-card clock"><p id="clockTime" class="clock-time"></p><p id="clockDate" class="muted"></p></div>
   <div class="side-card">
-    <div class="cal-head"><button id="calPrev" class="icon-btn">‹</button><b id="calTitle"></b><button id="calNext" class="icon-btn">›</button></div>
+    <div class="cal-head"><button id="calPrev" aria-label="Предыдущий месяц" class="icon-btn">‹</button><b id="calTitle"></b><button id="calNext" aria-label="Следующий месяц" class="icon-btn">›</button></div>
     <div id="calGrid" class="cal"></div>
   </div>
 
@@ -301,9 +338,9 @@ svg,img{max-width:100%}
 
   <section id="dayTab">
     <div class="day-nav">
-      <button id="prevDay" class="nav-btn">◀</button>
-      <div class="day-center"><p id="dayLabel" class="day-label"></p><input type="date" id="dateInput"></div>
-      <button id="nextDay" class="nav-btn">▶</button>
+      <button id="prevDay" aria-label="Предыдущий день" class="nav-btn">◀</button>
+      <div class="day-center"><p id="dayLabel" class="day-label"></p><input type="date" id="dateInput" aria-label="Дата"></div>
+      <button id="nextDay" aria-label="Следующий день" class="nav-btn">▶</button>
     </div>
     <button id="todayBtn" class="today-btn">Перейти к сегодня</button>
     <div id="dayClasses" class="day-classes hidden"></div>
@@ -313,14 +350,14 @@ svg,img{max-width:100%}
     </div>
     <div id="cheer" class="cheer hidden">🎉 Все задачи выполнены! Ты молодец!</div>
     <div>
-      <input type="text" id="taskInput" class="full" placeholder="Напиши здесь...">
-      <select id="priority" class="full">
+      <input type="text" id="taskInput" aria-label="Новая задача" class="full" placeholder="Напиши здесь...">
+      <select id="priority" aria-label="Приоритет" class="full">
         <option value="high">🔴 Важно</option>
         <option value="mid" selected>🟡 Средне</option>
         <option value="low">🟢 Не срочно</option>
       </select>
       <label class="check"><input type="checkbox" id="timeToggle"> ⏰ Указать время</label>
-      <div id="timeFields" class="row hidden"><input type="time" id="startInput"><span>—</span><input type="time" id="endInput"></div>
+      <div id="timeFields" class="row hidden"><input type="time" id="startInput" aria-label="Начало"><span>—</span><input type="time" id="endInput" aria-label="Конец"></div>
       <button id="addButton" class="main-btn">➕ Добавить</button>
     </div>
     <ul id="taskList"></ul>
@@ -332,13 +369,13 @@ svg,img{max-width:100%}
 
   <section id="classesTab" class="hidden">
     <div>
-      <div class="row"><input type="text" id="clsName" placeholder="Предмет, например: Математика"><input type="text" id="clsRoom" placeholder="Аудитория, например: F304" style="max-width:42%"></div>
-      <select id="clsDay" class="full">
+      <div class="row"><input type="text" id="clsName" aria-label="Предмет" placeholder="Предмет, например: Математика"><input type="text" id="clsRoom" aria-label="Аудитория" placeholder="Аудитория, например: F304" style="max-width:42%"></div>
+      <select id="clsDay" aria-label="День недели" class="full">
         <option value="0">Понедельник</option><option value="1">Вторник</option><option value="2">Среда</option>
         <option value="3">Четверг</option><option value="4">Пятница</option><option value="5">Суббота</option><option value="6">Воскресенье</option>
       </select>
-      <select id="clsSlot" class="full"><option value="">⏱ Выбрать время пары</option></select>
-      <div class="row"><input type="time" id="clsStart"><span>—</span><input type="time" id="clsEnd"></div>
+      <select id="clsSlot" aria-label="Время пары" class="full"><option value="">⏱ Выбрать время пары</option></select>
+      <div class="row"><input type="time" id="clsStart" aria-label="Начало пары"><span>—</span><input type="time" id="clsEnd" aria-label="Конец пары"></div>
       <button id="addClass" class="main-btn">➕ Добавить пару</button>
     </div>
     <div id="classList"></div>
@@ -346,8 +383,8 @@ svg,img{max-width:100%}
 
   <section id="examsTab" class="hidden">
     <div>
-      <input type="text" id="examName" class="full" placeholder="Название экзамена">
-      <input type="date" id="examDate" class="full">
+      <input type="text" id="examName" aria-label="Название экзамена" class="full" placeholder="Название экзамена">
+      <input type="date" id="examDate" aria-label="Дата экзамена" class="full">
       <button id="addExam" class="main-btn">➕ Добавить экзамен</button>
     </div>
     <ul id="examList"></ul>
@@ -362,7 +399,7 @@ svg,img{max-width:100%}
         <button id="timerReset" class="soft-btn">↺ Сброс</button>
       </div>
       <div class="timer-settings"><label>🔔 Мелодия
-        <select id="soundSel" class="full"><option value="m1">🎹 Классика</option><option value="m2">🥁 Бит</option><option value="m3">🔔 Колокольчик</option><option value="file">🎵 Моя музыка</option></select></label></div>
+        <select id="soundSel" aria-label="Мелодия" class="full"><option value="m1">🎹 Классика</option><option value="m2">🥁 Бит</option><option value="m3">🔔 Колокольчик</option><option value="file">🎵 Моя музыка</option></select></label></div>
       <div class="row center">
         <button id="soundPrev" class="soft-btn">▶ Послушать</button>
         <label class="soft-btn" style="cursor:pointer">🎵 Своя музыка<input type="file" id="soundFile" accept="audio/*" hidden></label>
@@ -385,11 +422,11 @@ svg,img{max-width:100%}
   <section id="friendsTab" class="hidden">
     <p id="frLogin" class="empty">Войди в аккаунт (👤), чтобы добавить друзей</p>
     <div id="frBox" class="hidden">
-      <input type="text" id="frName" class="full" placeholder="Твоё имя">
+      <input type="text" id="frName" aria-label="Имя" class="full" placeholder="Твоё имя">
       <button id="frSave" class="soft-btn" style="margin-top:0">Сохранить имя</button>
       <p class="muted">Твой код друга:</p>
-      <div class="row"><input type="text" id="frCode" readonly><button id="frCopy" class="soft-btn">📋</button></div>
-      <div class="row"><input type="text" id="frAdd" placeholder="Код друга"><button id="frAddBtn" class="main-btn small">➕</button></div>
+      <div class="row"><input type="text" id="frCode" aria-label="Твой код" readonly><button id="frCopy" aria-label="Скопировать код" class="soft-btn">📋</button></div>
+      <div class="row"><input type="text" id="frAdd" aria-label="Код друга" placeholder="Код друга"><button id="frAddBtn" aria-label="Добавить друга" class="main-btn small">➕</button></div>
       <p id="frMsg" class="muted"></p>
       <h3 class="opt-title">🏠 Комната питомцев</h3>
       <div id="room" class="room"></div>
@@ -403,15 +440,15 @@ svg,img{max-width:100%}
       <div style="flex:1;min-width:220px">
         <h2 id="profName" style="margin:0"></h2>
         <p id="profEmail" class="muted" style="margin:4px 0 8px"></p>
-        <div class="row"><input type="text" id="profEdit" placeholder="Твоё имя"><button id="profSave" class="soft-btn">Сохранить имя</button></div>
+        <div class="row"><input type="text" id="profEdit" aria-label="Имя" placeholder="Твоё имя"><button id="profSave" class="soft-btn">Сохранить имя</button></div>
       </div>
     </div>
     <div id="profStats" class="prof-stats"></div>
     <div id="accBox" class="acc">
     <p id="accMsg" class="muted"></p>
     <div id="accForm">
-      <input type="email" id="accEmail" class="full" placeholder="Почта">
-      <input type="password" id="accPass" class="full" placeholder="Пароль (мин. 6 символов)">
+      <input type="email" id="accEmail" aria-label="Почта" class="full" placeholder="Почта">
+      <input type="password" id="accPass" aria-label="Пароль" class="full" placeholder="Пароль (мин. 6 символов)">
       <div class="row center"><button id="accLogin" class="main-btn small">Войти</button><button id="accSignup" class="soft-btn">Регистрация</button></div>
       <button id="accGoogle" class="soft-btn">🔵 Войти через Google</button>
       <button id="accReset" class="soft-btn">Забыли пароль?</button>
@@ -420,6 +457,7 @@ svg,img{max-width:100%}
     </div>
     <h3 class="opt-title">🎨 Фон сайта</h3>
     <div id="bgGallery" class="bg-gal"></div>
+    <button id="tourBtn" class="soft-btn" style="margin-left:0">🎓 Показать обучение</button>
     <label class="soft-btn" style="cursor:pointer;margin-left:0">📷 Свой фон из фото<input type="file" id="bgFile" accept="image/*" hidden></label>
   </section>
 
@@ -433,7 +471,7 @@ svg,img{max-width:100%}
 </div>
 </div>
 
-<div id="frModal" class="modal hidden"><div class="modal-card"><button id="frClose" class="icon-btn" style="float:right">✖</button><div id="frModalBody"></div></div></div>
+<div id="frModal" class="modal hidden"><div class="modal-card"><button id="frClose" aria-label="Закрыть" class="icon-btn" style="float:right">✖</button><div id="frModalBody"></div></div></div>
 
 <script>
 let LOC = "ru-RU";
@@ -534,6 +572,7 @@ function showTab(name) {
   document.querySelectorAll(".tab").forEach((b) => {
     const on = b.dataset.tab === name;
     b.classList.toggle("active", on);
+    b.setAttribute("aria-current", on ? "page" : "false");
     if (on) { const t = b.firstChild; $("pageTitle").textContent = t.__ru !== undefined ? t.__ru : t.nodeValue; }
   });
   try { if (location.hash !== "#" + name) history.pushState(null, "", "#" + name); } catch (e) {}
@@ -591,9 +630,9 @@ function renderDay() {
       if (task.done && dayComplete(currentDate)) confetti();
     };
     const edit = el("button", "small-btn", "✏️");
-    edit.onclick = () => {
-      const t = prompt(tr("Исправь задачу:"), task.text);
-      if (t && t.trim()) { task.text = t.trim(); save(); renderDay(); }
+    edit.onclick = async () => {
+      const t = await askText(tr("Исправь задачу:"), task.text);
+      if (t && t.trim()) { task.text = t.trim(); save(); renderDay(); toast("Задача изменена ✏️"); }
     };
     const del = el("button", "small-btn del", "🗑");
     del.onclick = () => { tasks = tasks.filter((t) => t !== task); save(); renderDay(); };
@@ -637,6 +676,7 @@ function addTask() {
   $("timeToggle").checked = false;
   $("timeFields").classList.add("hidden");
   renderDay();
+  toast("Задача добавлена ✅");
 }
 $("addButton").onclick = addTask;
 $("taskInput").onkeydown = (e) => { if (e.key === "Enter") addTask(); };
@@ -647,7 +687,7 @@ $("carryBtn").onclick = () => {
   tasks.forEach((t) => { if (t.date === currentDate && !t.done) { t.date = next; n++; } });
   save();
   renderDay();
-  alert(tr("Перенесено задач на следующий день: ") + n);
+  toast(tr("Перенесено задач на следующий день: ") + n);
 };
 
 // ===== Неделя =====
@@ -729,8 +769,8 @@ function renderClasses() {
       cell.style.background = colorOf(c.name);
       cell.appendChild(el("div", "tt-n", c.name));
       if (c.room) cell.appendChild(el("div", "tt-r", "🚪 " + c.room));
-      cell.onclick = () => {
-        if (confirm(tr("Удалить пару?") + " " + c.name)) { classes = classes.filter((x) => x !== c); save(); renderClasses(); }
+      cell.onclick = async () => {
+        if (await askConfirm(tr("Удалить пару?") + " " + c.name)) { classes = classes.filter((x) => x !== c); save(); renderClasses(); }
       };
       g.appendChild(cell);
     }
@@ -739,7 +779,7 @@ function renderClasses() {
 }
 $("addClass").onclick = () => {
   const name = $("clsName").value.trim(), start = $("clsStart").value;
-  if (!name || !start) { alert(tr("Укажи предмет и время начала")); return; }
+  if (!name || !start) { toast("Укажи предмет и время начала", "warn"); return; }
   classes.push({ name: name, room: $("clsRoom").value.trim(), day: Number($("clsDay").value), start: start, end: $("clsEnd").value });
   save();
   $("clsName").value = ""; $("clsRoom").value = ""; $("clsSlot").value = ""; $("clsStart").value = ""; $("clsEnd").value = "";
@@ -768,7 +808,7 @@ function renderExams() {
 }
 $("addExam").onclick = () => {
   const name = $("examName").value.trim(), date = $("examDate").value;
-  if (!name || !date) { alert(tr("Укажи название и дату")); return; }
+  if (!name || !date) { toast("Укажи название и дату", "warn"); return; }
   exams.push({ name: name, date: date });
   save();
   $("examName").value = ""; $("examDate").value = "";
@@ -1159,6 +1199,7 @@ function renderProfile() {
   });
   renderBgGallery();
 }
+$("tourBtn").onclick = startTour;
 $("profSave").onclick = () => {
   const n = $("profEdit").value.trim();
   if (!n) return;
@@ -1167,6 +1208,98 @@ $("profSave").onclick = () => {
   if (window.showHello) window.showHello();
   renderProfile();
 };
+
+// ===== Тосты, окна и обучение =====
+function toast(msg, kind) {
+  let box = $("toasts");
+  if (!box) { box = el("div"); box.id = "toasts"; box.setAttribute("aria-live", "polite"); document.body.appendChild(box); }
+  const t = el("div", "toast" + (kind ? " " + kind : ""), tr(msg));
+  box.appendChild(t);
+  setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 300); }, 2600);
+}
+function dialog(title, withInput, value) {
+  return new Promise((res) => {
+    const ov = el("div", "modal"), card = el("div", "modal-card dlg");
+    ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
+    card.appendChild(el("p", "dlg-title", title));
+    let inp = null;
+    if (withInput) { inp = el("input", "full"); inp.type = "text"; inp.value = value || ""; inp.setAttribute("aria-label", title); card.appendChild(inp); }
+    const row = el("div", "dlg-btns"), no = el("button", "soft-btn", tr("Отмена")), ok = el("button", "main-btn small", "OK");
+    row.append(no, ok);
+    card.appendChild(row); ov.appendChild(card); document.body.appendChild(ov);
+    const close = (v) => { document.removeEventListener("keydown", key); ov.remove(); res(v); };
+    const key = (e) => { if (e.key === "Escape") close(withInput ? null : false); if (e.key === "Enter" && withInput) close(inp.value); };
+    document.addEventListener("keydown", key);
+    no.onclick = () => close(withInput ? null : false);
+    ok.onclick = () => close(withInput ? inp.value : true);
+    ov.onclick = (e) => { if (e.target === ov) no.onclick(); };
+    (inp || ok).focus();
+    if (inp) inp.select();
+  });
+}
+const askText = (t, v) => dialog(t, true, v);
+const askConfirm = (t) => dialog(t, false);
+
+const TOUR = [
+  { text: "Привет! 👋 Это твой планировщик учёбы. Покажу главное за полминуты." },
+  { sel: "nav.tabs", text: "Это меню: задачи, неделя, пары, экзамены, таймер, питомец и друзья." },
+  { sel: "#taskInput", tab: "day", text: "Здесь добавляй задачи: напиши и нажми «Добавить»." },
+  { sel: "#streak", text: "Серия: выполняй хотя бы одну задачу в день, и огонёк будет расти 🔥" },
+  { sel: '.tab[data-tab="pet"]', text: "Питомец радуется твоей серии и открывает новую одежду 🐾" },
+  { sel: "#accBtn", text: "Создай аккаунт, чтобы данные были на всех устройствах и можно было добавлять друзей." },
+  { text: "Готово! Удачной учёбы 🎉" }
+];
+let tourI = 0;
+function tourPlace() {
+  const st = TOUR[tourI], spot = $("tourSpot"), card = $("tourCard");
+  if (st.tab) showTab(st.tab);
+  const t = st.sel ? document.querySelector(st.sel) : null;
+  if (!t || t.offsetParent === null) {
+    spot.style.cssText = "left:50%;top:50%;width:0;height:0";
+    card.style.left = Math.max(10, innerWidth / 2 - 160) + "px"; card.style.top = Math.max(10, innerHeight / 2 - 90) + "px";
+    return;
+  }
+  t.scrollIntoView({ block: "center" });
+  const r = t.getBoundingClientRect(), ch = card.offsetHeight, cw = Math.min(320, innerWidth - 20);
+  spot.style.cssText = "left:" + (r.left - 6) + "px;top:" + (r.top - 6) + "px;width:" + (r.width + 12) + "px;height:" + (r.height + 12) + "px";
+  let left = Math.min(Math.max(10, r.left), innerWidth - cw - 10), top;
+  if (r.height > innerHeight * 0.6 && r.right + cw + 24 < innerWidth) { left = r.right + 16; top = r.top + 20; }
+  else if (r.bottom + ch + 24 < innerHeight) top = r.bottom + 16;
+  else top = Math.max(10, r.top - ch - 16);
+  card.style.left = left + "px"; card.style.top = top + "px";
+}
+function tourShow() {
+  const st = TOUR[tourI], last = tourI === TOUR.length - 1;
+  $("tourText").textContent = tr(st.text);
+  $("tourStep").textContent = (tourI + 1) + " / " + TOUR.length;
+  $("tourBack").classList.toggle("hidden", tourI === 0);
+  $("tourNext").textContent = tr(last ? "Готово!" : "Далее →");
+  $("tourSkip").classList.toggle("hidden", last);
+  tourPlace();
+  requestAnimationFrame(tourPlace);
+}
+function endTour() {
+  localStorage.setItem("tourDone", "1");
+  const t = $("tour");
+  if (t) t.remove();
+  window.removeEventListener("resize", tourPlace);
+  showTab("home");
+}
+function startTour() {
+  if ($("tour")) return;
+  const ov = el("div"); ov.id = "tour";
+  ov.innerHTML = '<div id="tourSpot" class="tour-spot"></div><div id="tourCard" class="tour-card" role="dialog" aria-modal="true" aria-label="Обучение"><p id="tourText"></p><div class="tour-btns"><span id="tourStep" class="muted"></span><span><button id="tourSkip" class="soft-btn">Пропустить</button> <button id="tourBack" class="soft-btn">← Назад</button> <button id="tourNext" class="main-btn small">Далее →</button></span></div></div>';
+  document.body.appendChild(ov);
+  tourI = 0;
+  $("tourNext").onclick = () => { if (tourI === TOUR.length - 1) endTour(); else { tourI++; tourShow(); } };
+  $("tourBack").onclick = () => { if (tourI > 0) { tourI--; tourShow(); } };
+  $("tourSkip").onclick = endTour;
+  window.addEventListener("resize", tourPlace);
+  walk(ov);
+  tourShow();
+  $("tourNext").focus();
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("tour")) endTour(); });
 
 // ===== Эффект «ряби» на кнопках =====
 document.addEventListener("click", (e) => {
@@ -1393,7 +1526,22 @@ const D = [
 ["Эта почта уже зарегистрирована","Бұл пошта тіркелген","This email is already registered"],
 ["Пароль слишком короткий (минимум 6 символов)","Құпиясөз тым қысқа (кемінде 6 таңба)","Password too short (min. 6 characters)"],
 ["Неправильная почта","Пошта дұрыс емес","Invalid email"],["Ошибка сохранения","Сақтау қатесі","Save error"],
-["👥 Друзья","👥 Достар","👥 Friends"],["🏠 Главная","🏠 Басты бет","🏠 Home"],["🏠 Комната питомцев","🏠 Жануарлар бөлмесі","🏠 Pets room"],["Вид питомца","Жануар түрі","Pet type"],["👤 Профиль","👤 Профиль","👤 Profile"],["🎨 Фон сайта","🎨 Сайт фоны","🎨 Site background"],
+["👥 Друзья","👥 Достар","👥 Friends"],["🏠 Главная","🏠 Басты бет","🏠 Home"],["🏠 Комната питомцев","🏠 Жануарлар бөлмесі","🏠 Pets room"],["Вид питомца","Жануар түрі","Pet type"],
+["Привет! 👋 Это твой планировщик учёбы. Покажу главное за полминуты.","Сәлем! 👋 Бұл сенің оқу жоспарлаушың. Ең бастысын жарты минутта көрсетемін.","Hi! 👋 This is your study planner. Let me show you the essentials in 30 seconds."],
+["Это меню: задачи, неделя, пары, экзамены, таймер, питомец и друзья.","Бұл мәзір: тапсырмалар, апта, сабақ, емтихан, таймер, питомец және достар.","This is the menu: tasks, week, classes, exams, timer, pet and friends."],
+["Здесь добавляй задачи: напиши и нажми «Добавить».","Мұнда тапсырма қос: жазып, «Қосу» батырмасын бас.","Add tasks here: type and press “Add”."],
+["Серия: выполняй хотя бы одну задачу в день, и огонёк будет расти 🔥","Серия: күнде кемінде бір тапсырма орында, оттық өсе береді 🔥","Streak: complete at least one task a day and the flame keeps growing 🔥"],
+["Питомец радуется твоей серии и открывает новую одежду 🐾","Питомец сенің сериясыңа қуанып, жаңа киім ашады 🐾","Your pet cheers your streak and unlocks new outfits 🐾"],
+["Создай аккаунт, чтобы данные были на всех устройствах и можно было добавлять друзей.","Деректер барлық құрылғыда болуы және достар қосу үшін аккаунт жаса.","Create an account to keep your data on all devices and add friends."],
+["Готово! Удачной учёбы 🎉","Дайын! Оқуда сәттілік 🎉","All set! Good luck with your studies 🎉"],
+["Отмена","Бас тарту","Cancel"],
+["Задача добавлена ✅","Тапсырма қосылды ✅","Task added ✅"],
+["Задача изменена ✏️","Тапсырма өзгертілді ✏️","Task updated ✏️"],
+["Далее →","Келесі →","Next →"],
+["← Назад","← Артқа","← Back"],
+["Пропустить","Өткізу","Skip"],
+["Готово!","Дайын!","Done!"],
+["🎓 Показать обучение","🎓 Оқулықты қайта көрсету","🎓 Replay tutorial"],["👤 Профиль","👤 Профиль","👤 Profile"],["🎨 Фон сайта","🎨 Сайт фоны","🎨 Site background"],
 ["📷 Свой фон из фото","📷 Өз суретімді фон ету","📷 Use my photo"],["Гость","Қонақ","Guest"],["Не выполнен вход","Кіру жасалмаған","Not signed in"],
 ["🎨 Градиент","🎨 Градиент","🎨 Gradient"],["📷 Моё фото","📷 Менің суретім","📷 My photo"],["🏔 Горы","🏔 Таулар","🏔 Mountains"],["🌲 Лес","🌲 Орман","🌲 Forest"],
 ["🌅 Закат","🌅 Күн батуы","🌅 Sunset"],["🌌 Ночь","🌌 Түн","🌌 Night"],["🌸 Сакура","🌸 Сакура","🌸 Sakura"],["📚 Планировщик","📚 Жоспарлаушы","📚 Planner"],["🐾 Открыть питомца","🐾 Питомецті ашу","🐾 Open pet"],["Войди в аккаунт (👤), чтобы добавить друзей","Дос қосу үшін аккаунтқа кір (👤)","Log in (👤) to add friends"],
@@ -1473,6 +1621,7 @@ save();
 { const n0 = location.hash.slice(1); showTab(TABS.includes(n0) ? n0 : "home"); }
 applyColor();
 applyBg();
+if (!localStorage.getItem("tourDone")) setTimeout(startTour, 900);
 setLang(localStorage.getItem("lang") || "ru");
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
 </script>
