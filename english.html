@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>English A0 — 50 сабақ</title>
+<meta name="description" content="A0 ағылшын тілін 50 видеосабақ арқылы 100% меңгеру: тыңдау, оқу, сөйлеу, жазу.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+<style>
+*{box-sizing:border-box}
+:root{--bg:#f3f5ff;--card:#fff;--text:#1f2433;--muted:#667085;--line:#e3e7f5;--a:#4c6ef5;--b:#7950f2;--ok:#12b886;--soft:#eef1ff}
+@media(prefers-color-scheme:dark){:root{--bg:#12141f;--card:#1c2030;--text:#e8eaf6;--muted:#a3a9c2;--line:#2c3248;--soft:#252a40}}
+body{margin:0;font-family:system-ui,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 20px;background:var(--card);box-shadow:0 2px 14px rgba(0,0,0,.08)}
+.brand{font-weight:800;color:var(--a);font-size:18px}
+nav{display:flex;gap:6px;flex:1;flex-wrap:wrap}
+nav a{padding:8px 14px;border-radius:10px;color:var(--text);text-decoration:none;transition:.15s}
+nav a:hover{background:var(--soft);transform:translateY(-1px)}
+nav a.on{background:linear-gradient(135deg,var(--a),var(--b));color:#fff}
+.pill{background:var(--soft);padding:6px 14px;border-radius:20px;font-weight:700}
+main{max-width:1000px;margin:0 auto;padding:22px 16px 60px;animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(12px)}}
+h1,h2,h3{margin:0 0 10px}
+.card{background:var(--card);border-radius:18px;padding:18px;margin-bottom:16px;box-shadow:0 6px 24px rgba(0,0,0,.07);transition:transform .2s,box-shadow .2s}
+@media(hover:hover){.card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.12)}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.hero{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.ring{width:150px;height:150px;flex:0 0 150px}
+.bar{height:10px;background:var(--line);border-radius:8px;overflow:hidden;margin:4px 0 10px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ok),var(--a));border-radius:8px;transition:width .6s}
+.muted{color:var(--muted);font-size:14px}
+button,.btn{font:inherit;cursor:pointer;border:none;border-radius:12px;padding:10px 16px;background:linear-gradient(135deg,var(--a),var(--b));color:#fff;text-decoration:none;display:inline-block;transition:.15s;position:relative}
+button:hover,.btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(76,110,245,.35)}
+button:active{transform:scale(.96)}
+.ghost{background:var(--soft);color:var(--a)}
+.red{background:#e03131}
+input,textarea{font:inherit;width:100%;padding:11px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);margin:6px 0}
+input:focus,textarea:focus{outline:none;border-color:var(--a)}
+textarea{min-height:90px;resize:vertical}
+.video{position:relative;padding-top:56.25%;border-radius:14px;overflow:hidden;margin:10px 0}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.tile{display:block;padding:12px;border-radius:14px;background:var(--card);box-shadow:0 4px 14px rgba(0,0,0,.07);text-decoration:none;color:var(--text);transition:.15s}
+.tile:hover{transform:translateY(-3px)}
+.tile.cur{outline:3px solid var(--a)}
+.tile b{font-size:20px}
+.dots{display:flex;gap:4px;margin-top:6px}
+.dots i{width:12px;height:12px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--ok)}
+.skillhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.steps{margin:8px 0;padding-left:20px;color:var(--muted)}
+.chip{display:inline-flex;gap:6px;align-items:center;background:var(--soft);border-radius:20px;padding:4px 10px;margin:3px}
+.chip button{padding:2px 8px;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row input{flex:1;min-width:120px}
+.stars button{background:none;color:#adb5bd;font-size:26px;padding:0 3px}
+.stars button.on{color:#fab005}
+.flash{text-align:center;padding:36px 16px;font-size:32px;font-weight:800;min-height:150px;cursor:pointer}
+.done{border-left:6px solid var(--ok)}
+#toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:50;display:flex;flex-direction:column;gap:8px}
+.toast{background:#212529;color:#fff;padding:12px 18px;border-radius:14px;animation:in .3s}
+.toast.warn{background:#c92a2a}
+.hidden{display:none}
+@media(max-width:600px){.top{padding:8px 10px}.ring{margin:auto}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand">🎓 English A0</div><nav id="nav" aria-label="Мәзір"></nav><div id="pct" class="pill">0%</div></header>
+<main id="app"></main>
+<div id="toasts" aria-live="polite"></div>
+<noscript><p style="padding:20px">JavaScript керек.</p></noscript>
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (t) => String(t == null ? "" : t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const today = () => new Date().toLocaleDateString("sv-SE");
+const addD = (iso, n) => { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return d.toLocaleDateString("sv-SE"); };
+const K = { l: ["🎧", "Тыңдау"], r: ["📖", "Оқу"], s: ["🗣", "Сөйлеу"], w: ["✍️", "Жазу"] };
+const mk = (i) => ({ title: "Сабақ " + (i + 1), vid: i === 0 ? "IQnNkfEAa8M" : "", done: { l: 0, r: 0, s: 0, w: 0 }, dict: "", stars: 0, text: "", target: "", acc: 0, rev: [] });
+let S;
+try { S = JSON.parse(localStorage.getItem("a0")); } catch (e) {}
+if (!S || !S.lessons) S = { lessons: Array.from({ length: 50 }, (_, i) => mk(i)), vocab: [], days: {} };
+const save = () => localStorage.setItem("a0", JSON.stringify(S));
+function toast(m, k) { const t = document.createElement("div"); t.className = "toast " + (k || ""); t.textContent = m; $("#toasts").appendChild(t); setTimeout(() => t.remove(), 2600); }
+const ytId = (u) => { const m = String(u || "").match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : /^[\w-]{11}$/.test(u || "") ? u : ""; };
+const lp = (L) => Object.values(L.done).filter(Boolean).length * 25;
+const total = () => Math.round(S.lessons.reduce((a, L) => a + lp(L), 0) / S.lessons.length);
+const skillPct = (k) => Math.round((S.lessons.filter((L) => L.done[k]).length / S.lessons.length) * 100);
+const streak = () => { let d = today(), n = 0; if (!S.days[d]) d = addD(d, -1); while (S.days[d]) { n++; d = addD(d, -1); } return n; };
+const ring = (p) => `<svg class="ring" viewBox="0 0 120 120" role="img" aria-label="${p}%"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--line)" stroke-width="12"/><circle cx="60" cy="60" r="52" fill="none" stroke="url(#g)" stroke-width="12" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="${326.7 * (1 - p / 100)}" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .8s"/><defs><linearGradient id="g"><stop offset="0" stop-color="#12b886"/><stop offset="1" stop-color="#4c6ef5"/></linearGradient></defs><text x="60" y="68" text-anchor="middle" font-size="26" font-weight="800" fill="currentColor">${p}%</text></svg>`;
+const say = (t) => { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = "en-US"; u.rate = 0.85; speechSynthesis.speak(u); } catch (e) {} };
+const norm = (t) => t.toLowerCase().replace(/[^a-z0-9' ]/g, " ").split(/\s+/).filter(Boolean);
+function acc(a, b) {
+  const A = norm(a), B = norm(b);
+  if (!A.length) return 0;
+  const m = Array.from({ length: A.length + 1 }, () => Array(B.length + 1).fill(0));
+  for (let i = 1; i <= A.length; i++) for (let j = 1; j <= B.length; j++) m[i][j] = A[i - 1] === B[j - 1] ? m[i - 1][j - 1] + 1 : Math.max(m[i - 1][j], m[i][j - 1]);
+  return Math.round((m[A.length][B.length] / A.length) * 100);
+}
+function setDone(L, k, v) {
+  if (!!L.done[k] === !!v) return;
+  L.done[k] = v ? 1 : 0;
+  if (v) {
+    S.days[today()] = (S.days[today()] || 0) + 1;
+    toast(K[k][0] + " " + K[k][1] + " ✅");
+    if (lp(L) === 100 && !L.rev.length) { L.rev = [1, 3, 7, 14].map((n) => ({ d: addD(today(), n), ok: 0 })); toast("🎉 Сабақ 100% меңгерілді! Қайталау күндері белгіленді."); }
+  }
+  save(); route();
+}
+const dueLessons = () => S.lessons.map((L, i) => [L, i]).filter((x) => x[0].rev.some((r) => !r.ok && r.d <= today()));
+const dueWords = () => S.vocab.filter((w) => w.due <= today());
+
+// ---------- беттер ----------
+function pHome() {
+  const cur = S.lessons.findIndex((L) => lp(L) < 100), dl = dueLessons(), dw = dueWords();
+  const doneN = S.lessons.filter((L) => lp(L) === 100).length;
+  return `<div class="card hero">${ring(total())}<div style="flex:1;min-width:230px"><h1>100% меңгеруге жолың</h1><p class="muted">${doneN} / ${S.lessons.length} сабақ толық аяқталды · 🔥 ${streak()} күн қатарынан</p>
+  ${Object.keys(K).map((k) => `<div class="muted">${K[k][0]} ${K[k][1]} — ${skillPct(k)}%</div><div class="bar"><i style="width:${skillPct(k)}%"></i></div>`).join("")}</div></div>
+  <div class="grid">
+  <div class="card"><h3>📌 Бүгінгі сабақ</h3>${cur < 0 ? "<p>Барлық сабақ аяқталды! 🏆 Енді қайталауды жалғастыр.</p>" : `<p><b>${cur + 1}-сабақ:</b> ${esc(S.lessons[cur].title)}</p><a class="btn" href="#lesson/${cur}">Бастау →</a>`}</div>
+  <div class="card"><h3>🔁 Қайталау</h3><p>${dl.length} сабақ, ${dw.length} сөз</p>${dl.length ? `<a class="btn ghost" href="#lesson/${dl[0][1]}">Сабақты қайталау</a> ` : ""}${dw.length ? `<a class="btn" href="#vocab">Сөздерді қайталау</a>` : ""}${!dl.length && !dw.length ? '<p class="muted">Бүгін қайталайтын ештеңе жоқ ✅</p>' : ""}</div>
+  <div class="card"><h3>🎯 Әдіс</h3><p class="muted">Әр сабақта 4 дағды: тыңда, оқы, айт, жаз. Төртеуін орындасаң, сабақ 100%. Содан кейін 1, 3, 7, 14 күннен кейін қайталайсың.</p></div></div>`;
+}
+function pLessons() {
+  const cur = S.lessons.findIndex((L) => lp(L) < 100);
+  return `<h2>Барлық сабақтар</h2><div class="tiles">${S.lessons.map((L, i) => `<a class="tile ${i === cur ? "cur" : ""}" href="#lesson/${i}"><b>${i + 1}</b><div class="muted" style="font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${esc(L.title)}</div><div class="dots">${Object.keys(K).map((k) => `<i class="${L.done[k] ? "on" : ""}"></i>`).join("")}</div></a>`).join("")}</div>`;
+}
+function skill(k, L, body) {
+  return `<section class="card ${L.done[k] ? "done" : ""}"><div class="skillhead"><h3>${K[k][0]} ${K[k][1]}</h3><label><input type="checkbox" data-done="${k}" ${L.done[k] ? "checked" : ""} style="width:auto"> Дайын</label></div>${body}</section>`;
+}
+function pLesson(i) {
+  const L = S.lessons[i];
+  if (!L) return "<p>Сабақ табылмады</p>";
+  const id = ytId(L.vid), words = S.vocab.filter((w) => w.lid === i);
+  return `<div class="row"><a class="btn ghost" href="#lessons">← Тізім</a><h2 style="margin:0">${i + 1}-сабақ · ${lp(L)}%</h2></div>
+  <div class="card"><input id="ltitle" value="${esc(L.title)}" aria-label="Атауы"><input id="lvid" value="${esc(L.vid)}" placeholder="YouTube сілтемесі" aria-label="Видео сілтемесі">
+  ${id ? `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0" allowfullscreen title="Видео"></iframe></div><a class="muted" target="_blank" rel="noopener" href="https://youtu.be/${id}">YouTube-та ашу ↗</a>` : '<p class="muted">Видео сілтемесін жоғарыға қой, ол осында шығады.</p>'}</div>
+  ${skill("l", L, `<ol class="steps"><li>Видеоны субтитрсіз 1 рет көр.</li><li>Субтитрмен қайта көр.</li><li>Үшінші рет тоқтатып, естігеніңді қайтала (shadowing).</li></ol><textarea id="dict" placeholder="Естіген 5 сөйлемді жаз (диктант)">${esc(L.dict)}</textarea><div class="stars" role="group" aria-label="Түсіну деңгейі">${[1, 2, 3, 4, 5].map((n) => `<button data-star="${n}" class="${n <= L.stars ? "on" : ""}" aria-label="${n}">★</button>`).join("")}</div>`)}
+  ${skill("r", L, `<ol class="steps"><li>Субтитрді дауыстап оқы.</li><li>Белгісіз 5 сөзді табып, төменге қос.</li></ol><div class="row"><input id="w1" placeholder="English word" aria-label="Сөз"><input id="w2" placeholder="Аудармасы" aria-label="Аудармасы"><button id="addw">＋</button></div><div>${words.map((w) => `<span class="chip">${esc(w.w)} — ${esc(w.t)} <button data-say="${esc(w.w)}" class="ghost" aria-label="Тыңдау">🔊</button></span>`).join("") || '<span class="muted">Әлі сөз жоқ</span>'}</div>`)}
+  ${skill("s", L, `<ol class="steps"><li>Видеодан 1 сөйлемді төмендегі жолға жаз.</li><li>🔊 тыңда, 🎤 өзің айт: дәлдік 70%-дан асса, автоматты түрде орындалады.</li><li>🔴 өз дауысыңды жазып, қайта тыңда.</li></ol><input id="target" value="${esc(L.target)}" placeholder="English sentence" aria-label="Сөйлем"><div class="row"><button id="tts">🔊 Тыңда</button><button id="mic">🎤 Айт</button><button id="rec" class="red">🔴 Жазу</button></div><p id="sres" class="muted">${L.acc ? "Соңғы дәлдік: " + L.acc + "%" : ""}</p><audio id="play" controls class="hidden"></audio>`)}
+  ${skill("w", L, `<ol class="steps"><li>Бүгінгі сабақ туралы 3–5 сөйлем жаз.</li><li>Кемінде 25 сөз және 2 жаңа сөз қолдан: автоматты түрде орындалады.</li></ol><textarea id="wtext" placeholder="Write here...">${esc(L.text)}</textarea><p id="wc" class="muted"></p>`)}
+  <div class="row"><a class="btn ghost" href="#lesson/${Math.max(0, i - 1)}">← Алдыңғы</a><a class="btn" href="#lesson/${Math.min(S.lessons.length - 1, i + 1)}">Келесі →</a></div>
+  ${L.rev.length ? `<div class="card"><h3>🔁 Қайталау</h3>${L.rev.map((r, n) => `<span class="chip">${r.d} ${r.ok ? "✅" : r.d <= today() ? `<button data-rev="${n}">Қайталадым</button>` : "⏳"}</span>`).join("")}</div>` : ""}`;
+}
+function pVocab() {
+  const due = dueWords();
+  return `<h2>📚 Сөздік (${S.vocab.length})</h2><div class="card"><h3>Қайталау: ${due.length} сөз</h3>
+  <div id="fc">${due.length ? `<div class="flash card" id="fcard" tabindex="0" role="button" aria-label="Аудармасын көру">${esc(due[0].w)}<div class="muted" style="font-size:16px">басып аудармасын көр</div></div><div class="row" id="fbtn" style="justify-content:center"></div>` : '<p class="muted">Қайталайтын сөз жоқ ✅</p>'}</div></div>
+  <div class="card"><h3>Барлық сөздер</h3>${S.vocab.map((w, n) => `<span class="chip">${esc(w.w)} — ${esc(w.t)} <button class="ghost" data-say="${esc(w.w)}" aria-label="Тыңдау">🔊</button><button class="ghost" data-delw="${n}" aria-label="Өшіру">✖</button></span>`).join("") || '<span class="muted">Сабақтардағы "Оқу" бөлімінен сөз қос.</span>'}</div>`;
+}
+function pSetup() {
+  return `<h2>⚙️ Баптау</h2><div class="card"><h3>Playlist тізімін қою</h3><p class="muted">YouTube-та плейлистті ашып, видео сілтемелерін (немесе атауларын) осында қой. Әр жол = бір сабақ. Формат: <code>сілтеме | атауы</code>. Прогресс сақталады.</p><textarea id="bulk" style="min-height:160px" placeholder="https://youtu.be/... | Hello!&#10;https://youtu.be/... | Numbers"></textarea><button id="bulkgo">Сабақтарды жаңарту</button></div>
+  <div class="card"><h3>Көшірме</h3><div class="row"><button id="exp" class="ghost">💾 Жүктеп алу</button><label class="btn ghost">📂 Жүктеу<input id="imp" type="file" accept=".json" hidden></label><button id="reset" class="red">Бәрін өшіру</button></div></div>`;
+}
+// ---------- маршрутизатор ----------
+function route() {
+  const h = location.hash.slice(1) || "home", [p, a] = h.split("/");
+  $("#nav").innerHTML = [["home", "🏠 Басты"], ["lessons", "📋 Сабақтар"], ["vocab", "📚 Сөздік"], ["setup", "⚙️ Баптау"]].map((x) => `<a href="#${x[0] === "home" ? "" : x[0]}" class="${p === x[0] || (p === "lesson" && x[0] === "lessons") ? "on" : ""}">${x[1]}</a>`).join("");
+  $("#pct").textContent = "🎯 " + total() + "%";
+  $("#app").innerHTML = ({ home: pHome, lessons: pLessons, lesson: () => pLesson(+a), vocab: pVocab, setup: pSetup }[p] || pHome)();
+  bind(+a);
+}
+function bind(i) {
+  const L = S.lessons[i], on = (s, ev, f) => { const e = $(s); if (e) e[ev] = f; };
+  document.querySelectorAll("[data-say]").forEach((b) => (b.onclick = () => say(b.dataset.say)));
+  document.querySelectorAll("[data-done]").forEach((c) => (c.onchange = () => setDone(L, c.dataset.done, c.checked)));
+  document.querySelectorAll("[data-star]").forEach((b) => (b.onclick = () => { L.stars = +b.dataset.star; save(); route(); if (L.stars >= 4) setDone(L, "l", 1); }));
+  document.querySelectorAll("[data-rev]").forEach((b) => (b.onclick = () => { L.rev[+b.dataset.rev].ok = 1; S.days[today()] = (S.days[today()] || 0) + 1; save(); route(); toast("✅ Қайталау орындалды"); }));
+  document.querySelectorAll("[data-delw]").forEach((b) => (b.onclick = () => { S.vocab.splice(+b.dataset.delw, 1); save(); route(); }));
+  if (L) {
+    on("#ltitle", "oninput", (e) => { L.title = e.target.value; save(); });
+    on("#lvid", "onchange", (e) => { L.vid = e.target.value.trim(); save(); route(); });
+    on("#dict", "oninput", (e) => { L.dict = e.target.value; save(); });
+    on("#addw", "onclick", () => { const w = $("#w1").value.trim(), t = $("#w2").value.trim(); if (!w || !t) return toast("Сөз бен аудармасын жаз", "warn"); S.vocab.push({ w: w, t: t, lid: i, box: 0, due: today() }); save(); route(); if (S.vocab.filter((x) => x.lid === i).length >= 5) setDone(L, "r", 1); });
+    on("#target", "oninput", (e) => { L.target = e.target.value; save(); });
+    on("#tts", "onclick", () => say(L.target || ""));
+    on("#mic", "onclick", () => {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!L.target) return toast("Алдымен сөйлемді жаз", "warn");
+      if (!SR) return toast("Дауыс тану үшін Chrome қолдан", "warn");
+      const r = new SR(); r.lang = "en-US"; r.interimResults = false;
+      r.onresult = (e) => { const t = e.results[0][0].transcript, a = acc(L.target, t); L.acc = a; $("#sres").textContent = "Естілгені: «" + t + "» · дәлдік " + a + "%"; save(); if (a >= 70) setDone(L, "s", 1); };
+      r.onerror = () => toast("Микрофон рұқсатын тексер", "warn");
+      r.start(); toast("🎤 Айт…");
+    });
+    let mr = null, chunks = [];
+    on("#rec", "onclick", async () => {
+      if (mr && mr.state === "recording") { mr.stop(); return; }
+      try {
+        const st = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mr = new MediaRecorder(st); chunks = [];
+        mr.ondataavailable = (e) => chunks.push(e.data);
+        mr.onstop = () => { st.getTracks().forEach((t) => t.stop()); const a = $("#play"); a.src = URL.createObjectURL(new Blob(chunks)); a.classList.remove("hidden"); $("#rec").textContent = "🔴 Жазу"; a.play(); };
+        mr.start(); $("#rec").textContent = "⏹ Тоқтату";
+      } catch (e) { toast("Микрофон рұқсатын тексер", "warn"); }
+    });
+    const wc = () => { const n = norm(L.text).length, used = S.vocab.filter((w) => w.lid === i && norm(L.text).includes(w.w.toLowerCase())).length, need = Math.min(2, S.vocab.filter((w) => w.lid === i).length); if ($("#wc")) $("#wc").textContent = n + " сөз · жаңа сөз: " + used + "/" + need; return n >= 25 && used >= need; };
+    wc();
+    on("#wtext", "oninput", (e) => { L.text = e.target.value; save(); if (wc()) setDone(L, "w", 1); });
+  }
+  const due = dueWords(); let cur = 0, shown = false;
+  const card = $("#fcard");
+  if (card) {
+    const flip = () => { if (shown) return; shown = true; card.innerHTML = esc(due[cur].w) + `<div style="font-size:22px;color:var(--ok)">${esc(due[cur].t)}</div>`; say(due[cur].w); $("#fbtn").innerHTML = '<button id="no" class="red">Білмедім</button><button id="yes">Білдім ✅</button>'; $("#yes").onclick = () => grade(1); $("#no").onclick = () => grade(0); };
+    card.onclick = flip; card.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") flip(); };
+    const grade = (ok) => { const w = due[cur], gap = [1, 3, 7, 14, 30]; w.box = ok ? Math.min(4, w.box + 1) : 0; w.due = ok ? addD(today(), gap[w.box]) : today(); S.days[today()] = (S.days[today()] || 0) + 1; save(); route(); };
+  }
+  on("#bulkgo", "onclick", () => {
+    const lines = $("#bulk").value.split("\n").map((x) => x.trim()).filter(Boolean);
+    lines.forEach((ln, n) => { const [a, b] = ln.split("|").map((x) => x.trim()); if (!S.lessons[n]) S.lessons[n] = mk(n); const id = ytId(a); if (id) { S.lessons[n].vid = id; if (b) S.lessons[n].title = b; else if (!/^Сабақ/.test(S.lessons[n].title)) {} } else S.lessons[n].title = a; });
+    save(); toast("✅ " + lines.length + " сабақ жаңартылды"); location.hash = "#lessons";
+  });
+  on("#exp", "onclick", () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(S)], { type: "application/json" })); a.download = "english-a0-backup.json"; a.click(); });
+  on("#imp", "onchange", async (e) => { try { const d = JSON.parse(await e.target.files[0].text()); if (d.lessons) { S = d; save(); route(); toast("✅ Жүктелді"); } } catch (er) { toast("Файл жарамсыз", "warn"); } });
+  on("#reset", "onclick", () => { if (confirm("Бәрін өшіресің бе?")) { localStorage.removeItem("a0"); location.hash = ""; location.reload(); } });
+}
+window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
+route();
+</script>
+</body>
+</html>
